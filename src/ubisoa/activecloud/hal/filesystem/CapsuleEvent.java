@@ -1,44 +1,33 @@
 package ubisoa.activecloud.hal.filesystem;
 
 import java.util.EventObject;
+import java.util.Vector;
 
 public class CapsuleEvent extends EventObject{
 	private static final long serialVersionUID = -2258402404358872576L;
 	
-	private String[] addedJars;
-	private String[] deletedJars;
-	private Boolean jarsAdded = false;
-	private Boolean jarsDeleted = false;
+	private Vector<String> addedJars;
+	private Vector<String> deletedJars;
 	
-	public CapsuleEvent(Object source, String[] addedJars, String[] deletedJars){
+	public CapsuleEvent(Object source, Vector<String> addedJars, Vector<String> deletedJars){
 		super(source);
 		this.addedJars = addedJars;
 		this.deletedJars = deletedJars;
-		if(addedJars.length > 0) jarsAdded = true;
-		if(deletedJars.length > 0) jarsDeleted = true;
 	}
 
-	public String[] getAddedJars() {
+	public Vector<String> getAddedJars() {
 		return addedJars;
 	}
 
-	public void setAddedJars(String[] addedJars) {
+	public void setAddedJars(Vector<String> addedJars) {
 		this.addedJars = addedJars;
 	}
 
-	public String[] getDeletedJars() {
+	public Vector<String> getDeletedJars() {
 		return deletedJars;
 	}
 
-	public void setDeletedJars(String[] deletedJars) {
+	public void setDeletedJars(Vector<String> deletedJars) {
 		this.deletedJars = deletedJars;
-	}
-
-	public Boolean jarsAdded() {
-		return jarsAdded;
-	}
-
-	public Boolean jarsDeleted() {
-		return jarsDeleted;
 	}
 }
