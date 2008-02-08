@@ -8,6 +8,7 @@ import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.Vector;
+import javax.swing.event.EventListenerList;
 
 import org.apache.log4j.Logger;
 
@@ -20,6 +21,7 @@ import org.apache.log4j.Logger;
 public class FileSystemWatcher extends TimerTask{
     private static Logger log = Logger.getLogger(FileSystemWatcher.class);
     
+    private EventListenerList listeners = new EventListenerList();
 	private String folderToWatch = "";
 	private File file;
 	Map<String, File> listOfFiles = new HashMap<String, File>();
@@ -96,6 +98,12 @@ public class FileSystemWatcher extends TimerTask{
 			listOfFiles.remove(iterator.next());
 		}
 		
+		if(!(toAdd.isEmpty() && toRemove.isEmpty())){
+			CapsuleEvent evt = new CapsuleEvent(this,toAdd, 
+					toRemove);
+			fireCapsuleEvent(evt);
+		}
+		
 		System.gc();
 	}
 	
@@ -113,6 +121,29 @@ public class FileSystemWatcher extends TimerTask{
 	 * */
 	public void stopWatching(){
 		t.cancel();
+	}
+	
+	/**
+	 * Registers the object as a CapsuleEventListener. The object will receive
+	 * CapsuleEvents fired.
+	 * */
+	public void addCapsuleEventListener(CapsuleEventListener evt){
+		listeners.add(CapsuleEventListener.class, evt);
+	}
+	
+	/**Removes the object from the CapsuleEventListener list*/
+	public void removeCapsuleEventListener(CapsuleEventListener evt){
+		listeners.remove(CapsuleEventListener.class, evt);
+	}
+	
+	/**Fires a CapsuleEvent event*/
+	protected void fireCapsuleEvent(CapsuleEvent evt){
+		Object[] registeredListeners = listeners.getListenerList();
+		for(int i=0; i<registeredListeners.length; i+=2){
+			if(registeredListeners[i] == CapsuleEventListener.class){
+				((CapsuleEventListener)registeredListeners[i+1]).CapsuleEventOcurred(evt);
+			}
+		}
 	}
 	
 	private Map<String, File> getFileMap(File[] files){
