@@ -11,11 +11,17 @@ import java.util.zip.ZipEntry;
 import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
-import javax.swing.SwingWorker;
 
 import org.apache.log4j.Logger;
+import org.jdesktop.swingworker.SwingWorker;
+import org.jdom.Document;
+import org.jdom.Element;
+import org.jdom.input.SAXBuilder;
+
+import ubisoa.activecloud.hal.capsules.ICapsule;
 
 public class CapsuleLoaderWorker extends SwingWorker<List<Image>, String>{
 	private static Logger log = Logger.getLogger(CapsuleLoaderWorker.class);
@@ -62,10 +68,16 @@ public class CapsuleLoaderWorker extends SwingWorker<List<Image>, String>{
 		int n = 0;
 		for(String filename : filenames){
 			try{
+				CapsuleLoader loader = new CapsuleLoader();
 				/*The given filenames are those of Capsules, we need to extract
 				 * the image file and return it as a list. By convention the
 				 * image file must be named icon.png*/
 				JarFile jar = new JarFile(new File(filename));
+				SAXBuilder builder = new SAXBuilder();
+				Document doc = builder.build(jar.getInputStream(
+						new ZipEntry("config.xml")));
+				Element root = doc.getRootElement();
+				loader.initClass("capsule", ICapsule.class, root);
 				images.add(ImageIO.read(jar.getInputStream(new ZipEntry("icon.png"))));
 				publish("Loaded " + filename);
 				n++;
@@ -73,6 +85,8 @@ public class CapsuleLoaderWorker extends SwingWorker<List<Image>, String>{
 				progressBar.setValue(n);
 			} catch (IOException ioe) {
 				log.error(ioe.getMessage());
+				JOptionPane.showMessageDialog(null, ioe.getMessage(), 
+						"Error", JOptionPane.ERROR_MESSAGE);
 			}
 		}
 		return images;

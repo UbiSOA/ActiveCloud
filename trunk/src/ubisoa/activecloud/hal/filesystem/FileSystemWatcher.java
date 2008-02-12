@@ -8,6 +8,7 @@ import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.Vector;
+
 import javax.swing.event.EventListenerList;
 
 import org.apache.log4j.Logger;
@@ -22,26 +23,24 @@ public class FileSystemWatcher extends TimerTask{
     private static Logger log = Logger.getLogger(FileSystemWatcher.class);
     
     private EventListenerList listeners = new EventListenerList();
-	private String folderToWatch = "";
+	private String folderToWatch;
 	private File file;
 	Map<String, File> listOfFiles = new HashMap<String, File>();
 	Map<String, File> newListOfFiles = new HashMap<String, File>();
 	Timer t;
 	
+	public FileSystemWatcher(){
+		super();
+	}
+	
 	/**Class constructor
 	 * @param	folderToWatch	The folder that will be polled for added
 	 * or deleted files*/
-	public FileSystemWatcher(String folderToWatch) throws Exception{
-		this.folderToWatch = folderToWatch;
-		file = new File(this.folderToWatch);
-		
-		/*This block gets the directory listing and adds every file
-		 * to the listOfFiles map, using its path as the key and the
-		 * file as the value*/
-		if(file.isDirectory()){
-			listOfFiles = getFileMap(file.listFiles(new JARFilter()));
-		} else {
-			throw new Exception("Path given is not a directory");
+	public FileSystemWatcher(String folderToWatch){
+		try{
+			initFileSystem(folderToWatch);	
+		} catch (Exception e) {
+			log.error(e.getMessage());
 		}
 	}
 	
@@ -52,6 +51,10 @@ public class FileSystemWatcher extends TimerTask{
 		 * are any new files*/
 		Vector<String> toRemove = new Vector<String>();
 		Vector<String> toAdd = new Vector<String>();
+		
+		if(file != null){
+			
+		}
 		
 		newListOfFiles = getFileMap(file.listFiles(new JARFilter()));
 		System.gc();
@@ -99,8 +102,8 @@ public class FileSystemWatcher extends TimerTask{
 		}
 		
 		if(!(toAdd.isEmpty() && toRemove.isEmpty())){
-			CapsuleEvent evt = new CapsuleEvent(this,toAdd, 
-					toRemove);
+			CapsuleEvent evt = new CapsuleEvent(this,(String[])toAdd.toArray(new String[toAdd.size()]), 
+					(String[])toRemove.toArray(new String[toRemove.size()]));
 			fireCapsuleEvent(evt);
 		}
 		
@@ -112,6 +115,7 @@ public class FileSystemWatcher extends TimerTask{
 	 * @param	timeInterval	The time interval for polling the filesystem
 	 * */
 	public void startWatching(int timeInterval){
+		
 		t = new Timer();
 		t.scheduleAtFixedRate(this, 0, timeInterval);
 	}
@@ -120,7 +124,8 @@ public class FileSystemWatcher extends TimerTask{
 	 * Stop watching the filesystem
 	 * */
 	public void stopWatching(){
-		t.cancel();
+		if(t != null)
+			t.cancel();
 	}
 	
 	/**
@@ -146,20 +151,49 @@ public class FileSystemWatcher extends TimerTask{
 		}
 	}
 	
+	/**
+	 * Returns true if the file passed as parameter meets the requirements of a capsule.
+	 * 
+	 * In order for a file to be considered a capsule it must meet the following criteria:
+	 * <ul>
+	 * 	<li>Be a JAR file</li>
+	 * 	<li>Have a config.xml file in its root folder</li>
+	 * 	<li>Have an icon.png that represents the capsule in the GUI. This icon should
+	 * 		measure 128x128</li>
+	 * 	<li>The class specified in its config.xml file must implement ICapsule</li>
+	 * 	<li>If the capsule needs external JAR libraries, they must be declared in
+	 * 		its MANIFEST.MF file, located under the META-INF directory in an entry
+	 * 		with the following format (path is relative to the capsule location): 
+	 * 		Class-Path: lib1.jar lib2.jar foo/lib3.jar</li>
+	 * </ul>
+	 * @param	jarFile	The file to be verified as capsule
+	 * @return	True if the file meets the criteria for a capsule
+	 * */
+	public static boolean isCapsule(File jarFile){
+		return true;
+	}
+	
 	private Map<String, File> getFileMap(File[] files){
 		Map<String, File> map = new HashMap<String, File>();
 		for(File key: files){
-			map.put(key.getPath(), key);
+			//Verify that the file is indeed a capsule, if not, don't bother
+			if(FileSystemWatcher.isCapsule(key))
+				map.put(key.getPath(), key);
 		}
 		return map;
 	}
 	
-	public static void main(String args[]){
-		try{
-			FileSystemWatcher fsw = new FileSystemWatcher("/home/cesar/Desktop");
-			fsw.startWatching(1000);
-		} catch (Exception e){
-			System.err.println(e.getMessage());
+	public void initFileSystem(String path) throws Exception{
+		/*This block gets the directory listing and adds every file
+		 * to the listOfFiles map, using its path as the key and the
+		 * file as the value*/
+		this.folderToWatch = path;
+		file = new File(this.folderToWatch);
+		
+		if(file.isDirectory()){
+			listOfFiles = getFileMap(file.listFiles(new JARFilter()));
+		} else {
+			throw new Exception("Given path is not a directory");
 		}
 	}
 }

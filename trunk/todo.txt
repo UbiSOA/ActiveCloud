@@ -1,16 +1,20 @@
 TODO:
 
-* FileSystemWatcher envía eventos para cada JAR agregado o eliminado del filesystem.
-CapsuleLoader debe escuchar estos eventos y cuando detecte una nueva capsula en el 
-FileSystem debe cargarla como plugin.
-
-* Las Capsulas deben tener un archivo config.xml que indica la configuracion de la
-capsula (nombre de la clase, parametros). Debe contener un archivo llamado icon.png
-que sirve para colocar un icono en la GUI. ¿Actualizar ICapsule para agregar método
-getConfigGui que regrese un JPanel con la GUI de configuración?
-
 * Averiguar como cargar recursos de un JAR específico, o hacer rutina que descomprima
-las capsulas y cargue los recursos a memoria.
+las capsulas y cargue los recursos a memoria. -- HECHO --
 
 * Implementar registro de capsulas cargadas al sistema, una base de datos utilizando 
 BeanKeeper
+
+* Filesystemwatcher envia eventos para cada JAR agregado o eliminado del filesystem.
+CapsuleLoader debe escuchar esos eventos y cuando detecte una nueva capsula en el
+FileSystem debe cargarla como plugin. -- HECHO -- CapsuleLoaderTest (o la GUI del middleware)
+escucha los eventos CapsuleEventOcurred y cada capsula que se agrega al directorio de
+capsulas las inserta al classpath y las carga a la GUI
+
+* Las capsulas deben tener un archivo config.xml que indica la configuracion de la
+capsula (nombre de la clase, parametros). Debe contener un archivo llamado icon.png
+que sirve para colocar un icono en la GUI. 
+
+* Actualizar ICapsule para agregar metodo
+getConfigGUI que regrese un JPanel con la GUI de la configuracion
