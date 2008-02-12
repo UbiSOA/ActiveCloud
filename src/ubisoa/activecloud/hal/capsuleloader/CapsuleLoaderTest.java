@@ -5,10 +5,12 @@ import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
 
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JFrame;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.JScrollPane;
@@ -17,8 +19,17 @@ import javax.swing.JTabbedPane;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
 
-public class CapsuleLoaderTest extends JFrame{
+import org.apache.log4j.Logger;
+
+import ubisoa.activecloud.hal.filesystem.CapsuleEvent;
+import ubisoa.activecloud.hal.filesystem.CapsuleEventListener;
+import ubisoa.activecloud.hal.filesystem.FileSystemWatcher;
+
+public class CapsuleLoaderTest extends JFrame implements CapsuleEventListener{
+	private static final long serialVersionUID = 5452960029326248074L;
+	
 	private JButton load;
+	private JButton stop;
 	private JTextField path;
 	private JSplitPane splitPane;
 	private JPanel buttonPanel;
@@ -26,6 +37,9 @@ public class CapsuleLoaderTest extends JFrame{
 	private JTabbedPane configTabs;
 	private JScrollPane imageScroll;
 	private JProgressBar progressBar;
+	private FileSystemWatcher fsw;
+	
+	private static final Logger log = Logger.getLogger(CapsuleLoaderTest.class);;
 	
 	public CapsuleLoaderTest(){
 		super();
@@ -33,13 +47,17 @@ public class CapsuleLoaderTest extends JFrame{
 	}
 	
 	private void initComponents(){
+		fsw = new FileSystemWatcher();
+		fsw.addCapsuleEventListener(this);
+		
 		this.setLayout(new BorderLayout());
 		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		this.setPreferredSize(new Dimension(800,600));
 		
 		buttonPanel = new JPanel();
 		buttonPanel.setLayout(new FlowLayout());
-		load = new JButton("Load capsule");
+		load = new JButton("Start monitoring");
+		stop = new JButton("Stop monitoring");
 		path = new JTextField();
 		progressBar = new JProgressBar();
 		progressBar.setMinimum(0);
@@ -48,6 +66,7 @@ public class CapsuleLoaderTest extends JFrame{
 		
 		path.setPreferredSize(new Dimension(300,21));
 		buttonPanel.add(load);
+		buttonPanel.add(stop);
 		buttonPanel.add(path);
 		buttonPanel.add(progressBar);
 		
@@ -69,9 +88,42 @@ public class CapsuleLoaderTest extends JFrame{
 		
 		load.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent evt){
-				new CapsuleLoaderWorker(imageViewer, progressBar, path.getText()).execute();
+				loadActionPerformed(evt);
 			}
 		});
+		
+		stop.addActionListener(new ActionListener(){
+			public void actionPerformed(ActionEvent evt){
+				load.setText("Start monitoring");
+				if(fsw != null)
+					fsw.stopWatching();
+			}
+		});
+	}
+
+	public void CapsuleEventOcurred(CapsuleEvent ce) {
+		final String[] addedJars = ce.getAddedJars();
+		new CapsuleLoaderWorker(imageViewer, progressBar, addedJars).execute();
+	}
+	
+	private void loadActionPerformed(ActionEvent evt){
+		File f = new File(path.getText());
+		if(f.isDirectory()){
+			try{
+				fsw.initFileSystem(path.getText());
+				fsw.startWatching(1000);
+				load.setEnabled(false);
+				load.setText("Monitoring...");
+			} catch (Exception e) {
+				log.error(e.getMessage());
+				JOptionPane.showMessageDialog(this, e.getMessage(), 
+						"Error", JOptionPane.ERROR_MESSAGE);
+			}
+		} else {
+			JOptionPane.showMessageDialog(this, "Please input a directory path", 
+					"Error", JOptionPane.ERROR_MESSAGE);
+			log.error("Given path is not directory: "+path.getText());
+		}
 	}
 	
 	public static void main(String args[]){

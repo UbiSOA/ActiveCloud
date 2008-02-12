@@ -18,18 +18,18 @@ public class CapsuleLoader {
 			log.error("No '"+elementName+"' element in parameter file");
 			throw new Exception("No '"+elementName+"' element in parameter file");
 		}
-		
+
 		//Get class attribute from XML
 		Attribute classAtt = child.getAttribute("class");
 		if(classAtt == null){
 			log.error("No 'class' Attribute found in element");
 			throw new Exception("No 'class' Attribute");
 		}
-		
+
 		//Make the instance
 		String className = classAtt.getValue();
 		Object o = Class.forName(className).newInstance();
-		
+
 		//Check for correct instance
 		if(!theClass.isInstance(o)){
 			log.error("Not an "+theClass.getName()+" class: "+o.getClass().getName());

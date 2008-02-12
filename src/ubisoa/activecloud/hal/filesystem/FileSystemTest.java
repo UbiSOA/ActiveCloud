@@ -5,7 +5,6 @@ import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.Vector;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -100,8 +99,8 @@ public class FileSystemTest extends JFrame{
 	}
 	
 	private void fswCapsuleEventOcurred(CapsuleEvent evt){
-		if(!evt.getAddedJars().isEmpty()){
-			final Vector<String> jarsAdded = evt.getAddedJars();
+		if(evt.getAddedJars().length != 0){
+			final String[] jarsAdded = evt.getAddedJars();
 			log.info("New JAR added");
 			SwingUtilities.invokeLater(new Runnable(){
 				public void run(){
@@ -115,8 +114,8 @@ public class FileSystemTest extends JFrame{
 			log.info("No new JARs added");
 		}
 		
-		if(!evt.getDeletedJars().isEmpty()){
-			final Vector<String> jarsDeleted = evt.getDeletedJars();
+		if(evt.getDeletedJars().length != 0){
+			final String[] jarsDeleted = evt.getDeletedJars();
 			log.info("JAR deleted");
 			SwingUtilities.invokeLater(new Runnable(){
 				public void run(){
