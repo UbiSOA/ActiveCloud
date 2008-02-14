@@ -1,6 +1,9 @@
 package ubisoa.activecloud.hal.filesystem;
 
+import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -8,7 +11,10 @@ import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.Vector;
+import java.util.jar.JarFile;
+import java.util.zip.ZipEntry;
 
+import javax.imageio.ImageIO;
 import javax.swing.event.EventListenerList;
 
 import org.apache.log4j.Logger;
@@ -161,16 +167,36 @@ public class FileSystemWatcher extends TimerTask{
 	 * 	<li>Have an icon.png that represents the capsule in the GUI. This icon should
 	 * 		measure 128x128</li>
 	 * 	<li>The class specified in its config.xml file must implement ICapsule</li>
-	 * 	<li>If the capsule needs external JAR libraries, they must be declared in
-	 * 		its MANIFEST.MF file, located under the META-INF directory in an entry
-	 * 		with the following format (path is relative to the capsule location): 
-	 * 		Class-Path: lib1.jar lib2.jar foo/lib3.jar</li>
 	 * </ul>
 	 * @param	jarFile	The file to be verified as capsule
 	 * @return	True if the file meets the criteria for a capsule
 	 * */
 	public static boolean isCapsule(File jarFile){
-		return true;
+		try{
+			//Check if this file is a JarFile
+			JarFile capsule = new JarFile(jarFile);
+			//check to see if there's a config.xml
+			InputStream is = capsule.getInputStream(new ZipEntry("config.xml"));
+			if(is != null){
+				//check to see if there's a icon.png file that can be loaded
+				BufferedImage bf = ImageIO.read(capsule.getInputStream(
+						new ZipEntry("icon.png")));
+				if(bf != null){
+					return true;
+				} else {
+					//Couldn't read icon.png
+					log.debug("Couldn't read icon.png from JAR");
+					return false;
+				}
+			} else {
+				//Couldn't read config.xml
+				log.debug("Couldn't read config.xml from JAR");
+				return false;
+			}
+		} catch (IOException ioe) {
+			log.error(ioe.getMessage());
+			return false;
+		}
 	}
 	
 	private Map<String, File> getFileMap(File[] files){
@@ -192,6 +218,11 @@ public class FileSystemWatcher extends TimerTask{
 		
 		if(file.isDirectory()){
 			listOfFiles = getFileMap(file.listFiles(new JARFilter()));
+			/*This event correspond to those capsules already present in
+			 * the filesystem*/
+			CapsuleEvent evt = new CapsuleEvent(this,(String[])listOfFiles.keySet()
+					.toArray(new String[listOfFiles.keySet().size()]),null);
+			fireCapsuleEvent(evt);
 		} else {
 			throw new Exception("Given path is not a directory");
 		}

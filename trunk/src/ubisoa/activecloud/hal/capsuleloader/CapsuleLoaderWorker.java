@@ -47,6 +47,9 @@ public class CapsuleLoaderWorker extends SwingWorker<List<Image>, String>{
 			}
 		} catch(Exception e) {
 			log.error(e.getMessage());
+			JOptionPane.showMessageDialog(null, "A capsule was detected but not loaded.\n" +
+					"Possible reasons include incomplete or malformed config.xml.", 
+					"Error", JOptionPane.ERROR_MESSAGE);
 		}
 	}
 	
@@ -77,6 +80,9 @@ public class CapsuleLoaderWorker extends SwingWorker<List<Image>, String>{
 				Document doc = builder.build(jar.getInputStream(
 						new ZipEntry("config.xml")));
 				Element root = doc.getRootElement();
+				
+				//Add the capsule to the classpath
+				ClassPathHacker.addFile(filename);
 				loader.initClass("capsule", ICapsule.class, root);
 				images.add(ImageIO.read(jar.getInputStream(new ZipEntry("icon.png"))));
 				publish("Loaded " + filename);

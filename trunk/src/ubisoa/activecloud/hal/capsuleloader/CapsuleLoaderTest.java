@@ -3,8 +3,6 @@ package ubisoa.activecloud.hal.capsuleloader;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.io.File;
 
 import javax.swing.BoxLayout;
@@ -86,19 +84,20 @@ public class CapsuleLoaderTest extends JFrame implements CapsuleEventListener{
 		this.setTitle("CapsuleLoaderTest");
 		this.pack();
 		
-		load.addActionListener(new ActionListener(){
-			public void actionPerformed(ActionEvent evt){
-				loadActionPerformed(evt);
-			}
-		});
+//		load.addActionListener(new ActionListener(){
+//			public void actionPerformed(ActionEvent evt){
+//				loadActionPerformed(evt);
+//			}
+//		});
 		
-		stop.addActionListener(new ActionListener(){
-			public void actionPerformed(ActionEvent evt){
-				load.setText("Start monitoring");
-				if(fsw != null)
-					fsw.stopWatching();
-			}
-		});
+//		stop.addActionListener(new ActionListener(){
+//			public void actionPerformed(ActionEvent evt){
+//				load.setText("Start monitoring");
+//				if(fsw != null)
+//					fsw.stopWatching();
+//			}
+//		});
+		startMonitoring();
 	}
 
 	public void CapsuleEventOcurred(CapsuleEvent ce) {
@@ -106,11 +105,12 @@ public class CapsuleLoaderTest extends JFrame implements CapsuleEventListener{
 		new CapsuleLoaderWorker(imageViewer, progressBar, addedJars).execute();
 	}
 	
-	private void loadActionPerformed(ActionEvent evt){
-		File f = new File(path.getText());
+	private void startMonitoring(){
+		File f = new File("capsules"+File.separator+"hal");
+		log.info("Monitoring: "+f.getAbsolutePath());
 		if(f.isDirectory()){
 			try{
-				fsw.initFileSystem(path.getText());
+				fsw.initFileSystem(f.getAbsolutePath());
 				fsw.startWatching(1000);
 				load.setEnabled(false);
 				load.setText("Monitoring...");
