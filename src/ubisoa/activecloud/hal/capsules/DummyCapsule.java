@@ -1,12 +1,21 @@
 package ubisoa.activecloud.hal.capsules;
 
-import org.jdom.Element;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+
 import org.apache.log4j.Logger;
+import org.jdom.Element;
 
 
 public class DummyCapsule implements ICapsule{
     private org.apache.log4j.Logger log = Logger
     .getLogger(DummyCapsule.class);
+    
+    public JPanel getConfigUI(){
+    	JPanel panel = new JPanel();
+    	panel.add(new JLabel("Config UI"));
+    	return panel;
+    }
     
 	public void init(Element e) throws Exception {
 		log.info("init called");
