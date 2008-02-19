@@ -9,6 +9,7 @@ import org.jdom.Element;
 import org.jdom.output.Format;
 import org.jdom.output.XMLOutputter;
 
+import ubisoa.activecloud.exceptions.InvalidCapsuleException;
 import ubisoa.activecloud.hal.capsules.Capsule;
 import ubisoa.activecloud.hal.capsules.ICapsule;
 import ubisoa.activecloud.services.NodeAccessService;
@@ -20,37 +21,46 @@ public class CapsuleLoader {
 	throws Exception{
 		if(root == null){
 			log.error("No '"+elementName+"' element in parameter file");
-			throw new Exception("No '"+elementName+"' element in parameter file");
+			throw new InvalidCapsuleException("No '"+elementName+"' element in parameter file");
 		}
 		
 		Element hal = root.getChild("hal");
 		Element ns = root.getChild("ns");
 
-		Object o;
+		Object o = null;
 		Capsule c;
 		
 		if(hal != null){
-			o = doInstance(hal);
-			c = new Capsule(hal.getAttributeValue("class"));
+			c = new Capsule();
+			c.setClassName(hal.getAttributeValue("class"));
+			if(!NodeAccessService.get().isCapsuleLoaded(c))
+				o = doInstance(hal);
 		}
 		else if(ns != null){
-			o = doInstance(ns);
-			c = new Capsule(ns.getAttributeValue("class"));
+			c = new Capsule();
+			c.setClassName(ns.getAttributeValue("class"));
+			if(!NodeAccessService.get().isCapsuleLoaded(c))
+				o = doInstance(ns);
 		}
 		else{
 			XMLOutputter output = new XMLOutputter();
 			output.setFormat(Format.getPrettyFormat());
 			log.info(output.outputString(root));
-			throw new Exception("config.xml is not of HAL or NS type.");
+			throw new InvalidCapsuleException("config.xml is not of HAL or NS type.");
 		}
 		
 		//Check for correct instance
-		if(!theClass.isInstance(o)){
-			log.error("Not an "+theClass.getName()+" class: "+o.getClass().getName());
-			throw new Exception("Not an "+theClass.getName()+" class: "+o.getClass().getName());
+		if(o != null){
+			if(!theClass.isInstance(o)){
+				log.error("Not an "+theClass.getName()+" class: "+o.getClass().getName());
+				throw new InvalidCapsuleException("Not an "+theClass.getName()+" class: "+o.getClass().getName());
+			}
+			/*The capsule got correctly loaded, we'll save it to the 
+			 * db of running capsules so we don't load it again.*/
+			((ICapsule)o).init(root);
+			NodeAccessService.get().saveCapsule(c);
 		}
-		((ICapsule)o).init(root);
-		NodeAccessService.get().saveCapsule(c);
+
 		return o;
 	}
 	
