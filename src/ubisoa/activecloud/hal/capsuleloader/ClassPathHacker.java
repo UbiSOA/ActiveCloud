@@ -46,6 +46,7 @@ public class ClassPathHacker {
 			Method method = sysclass.getDeclaredMethod("addURL", parameters);
 			method.setAccessible(true);
 			method.invoke(sysloader, new Object[]{u});
+			log.debug("Added "+u.toExternalForm()+" to the running classpath");
 		} catch (Throwable t){
 			log.error(t);
 			throw new IOException("Error, could not add URL to system classloader");

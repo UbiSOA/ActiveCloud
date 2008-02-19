@@ -1,6 +1,8 @@
 package ubisoa.activecloud.hal.capsuleloader;
 
-import java.awt.Image;
+import java.awt.BorderLayout;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -23,15 +25,17 @@ import org.jdom.input.SAXBuilder;
 
 import ubisoa.activecloud.hal.capsules.ICapsule;
 
-public class CapsuleLoaderWorker extends SwingWorker<List<Image>, String>{
+public class CapsuleLoaderWorker extends SwingWorker<List<ICapsule>, String>{
 	private static Logger log = Logger.getLogger(CapsuleLoaderWorker.class);
 	private JPanel viewer;
+	private JPanel configUI;
 	private JProgressBar progressBar;
 	private String[] filenames;
 	
 	public CapsuleLoaderWorker(JPanel viewer, JProgressBar progressBar, 
-			String... filenames){
+			JPanel configUI, String... filenames){
 		this.viewer = viewer;
+		this.configUI = configUI;
 		this.progressBar = progressBar;
 		this.filenames = filenames;
 	}
@@ -40,8 +44,43 @@ public class CapsuleLoaderWorker extends SwingWorker<List<Image>, String>{
 	@Override
 	protected void done(){
 		try{
-			for(Image image : get()){
-				viewer.add(new JLabel(new ImageIcon(image)));
+			for(final ICapsule capsule : get()){
+				JLabel capsuleLabel = new JLabel(new ImageIcon(capsule.getIcon()));
+				capsuleLabel.addMouseListener(new MouseListener(){
+					@Override
+					public void mouseClicked(MouseEvent arg0) {
+						// TODO Auto-generated method stub
+						configUI.add(capsule.getConfigUI(), BorderLayout.CENTER);
+						configUI.revalidate();
+						log.debug("loaded configUI");
+					}
+
+					@Override
+					public void mouseEntered(MouseEvent arg0) {
+						// TODO Auto-generated method stub
+						
+					}
+
+					@Override
+					public void mouseExited(MouseEvent arg0) {
+						// TODO Auto-generated method stub
+						
+					}
+
+					@Override
+					public void mousePressed(MouseEvent arg0) {
+						// TODO Auto-generated method stub
+						
+					}
+
+					@Override
+					public void mouseReleased(MouseEvent arg0) {
+						// TODO Auto-generated method stub
+						
+					}
+					
+				});
+				viewer.add(capsuleLabel);
 				viewer.revalidate();
 				progressBar.setValue(0);
 			}
@@ -63,8 +102,8 @@ public class CapsuleLoaderWorker extends SwingWorker<List<Image>, String>{
 
 	//This runs in a background thread
 	@Override
-	protected List<Image> doInBackground() throws Exception {
-		List<Image> images = new ArrayList<Image>();
+	protected List<ICapsule> doInBackground() throws Exception {
+		List<ICapsule> capsules = new ArrayList<ICapsule>();
 		progressBar.setMaximum(filenames.length);
 		log.debug("Max Progress Value: "+filenames.length);
 		progressBar.setValue(0);
@@ -83,8 +122,15 @@ public class CapsuleLoaderWorker extends SwingWorker<List<Image>, String>{
 				
 				//Add the capsule to the classpath
 				ClassPathHacker.addFile(filename);
-				loader.initClass("capsule", ICapsule.class, root);
-				images.add(ImageIO.read(jar.getInputStream(new ZipEntry("icon.png"))));
+				
+				/*Create the capsule object representation
+				 * from the files previously readed*/
+				ICapsule capsule = (ICapsule)loader.initClass("capsule", ICapsule.class, root);
+				capsule.setIcon(ImageIO.read(jar.getInputStream(new ZipEntry("icon.png"))));
+				capsule.setConfigElement(root);
+				capsules.add(capsule);
+				
+				/*Publish the temporary results*/
 				publish("Loaded " + filename);
 				n++;
 				log.debug("Progress Value: "+n);
@@ -95,6 +141,6 @@ public class CapsuleLoaderWorker extends SwingWorker<List<Image>, String>{
 						"Error", JOptionPane.ERROR_MESSAGE);
 			}
 		}
-		return images;
+		return capsules;
 	}
 }

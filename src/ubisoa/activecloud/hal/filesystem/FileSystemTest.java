@@ -15,13 +15,15 @@ import javax.swing.SwingUtilities;
 
 import org.apache.log4j.Logger;
 
+import ubisoa.activecloud.services.FileSystemService;
+
 public class FileSystemTest extends JFrame{
 	private static final long serialVersionUID = 8996088674680594677L;
 	public static Logger log = Logger.getLogger(FileSystemTest.class);
 	private JScrollPane scrollPane;
 	private JPanel buttonPanel;
 	private JTextArea textArea;
-	private FileSystemWatcher fsw;
+	private FileSystemService fsw;
 	private JButton start;
 	private JButton stop;
 	
@@ -32,10 +34,10 @@ public class FileSystemTest extends JFrame{
 	
 	private void initComponents(){
 		try{
-			fsw = new FileSystemWatcher("/Users/cesarolea");
+			fsw = new FileSystemService(1000,"/Users/cesarolea");
 		} catch (Exception e) {
 			log.error(e.getMessage());
-			fsw.stopWatching();
+			fsw.stop();
 		}
 		
 		/*Prepare the button panel*/
@@ -86,16 +88,16 @@ public class FileSystemTest extends JFrame{
 	
 	private void startButtonActionPerformed(ActionEvent evt){
 		if(fsw != null)
-			fsw.startWatching(1000);
+			fsw.start();
 		else
-			log.error("FileSystemWatcher is null");
+			log.error("FileSystemService is null");
 	}
 	
 	private void stopButtonActionPerformed(ActionEvent evt){
 		if(fsw != null)
-			fsw.stopWatching();
+			fsw.stop();
 		else
-			log.error("FileSystemWatcher is null");
+			log.error("FileSystemService is null");
 	}
 	
 	private void fswCapsuleEventOcurred(CapsuleEvent evt){

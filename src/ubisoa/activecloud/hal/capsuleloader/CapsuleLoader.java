@@ -9,7 +9,9 @@ import org.jdom.Element;
 import org.jdom.output.Format;
 import org.jdom.output.XMLOutputter;
 
+import ubisoa.activecloud.hal.capsules.Capsule;
 import ubisoa.activecloud.hal.capsules.ICapsule;
+import ubisoa.activecloud.services.NodeAccessService;
 
 public class CapsuleLoader {
     private static Logger log = Logger.getLogger(CapsuleLoader.class);
@@ -25,11 +27,16 @@ public class CapsuleLoader {
 		Element ns = root.getChild("ns");
 
 		Object o;
+		Capsule c;
 		
-		if(hal != null)
+		if(hal != null){
 			o = doInstance(hal);
-		else if(ns != null)
+			c = new Capsule(hal.getAttributeValue("class"));
+		}
+		else if(ns != null){
 			o = doInstance(ns);
+			c = new Capsule(ns.getAttributeValue("class"));
+		}
 		else{
 			XMLOutputter output = new XMLOutputter();
 			output.setFormat(Format.getPrettyFormat());
@@ -43,6 +50,7 @@ public class CapsuleLoader {
 			throw new Exception("Not an "+theClass.getName()+" class: "+o.getClass().getName());
 		}
 		((ICapsule)o).init(root);
+		NodeAccessService.get().saveCapsule(c);
 		return o;
 	}
 	
