@@ -126,9 +126,15 @@ public class CapsuleLoaderWorker extends SwingWorker<List<ICapsule>, String>{
 				/*Create the capsule object representation
 				 * from the files previously readed*/
 				ICapsule capsule = (ICapsule)loader.initClass("capsule", ICapsule.class, root);
-				capsule.setIcon(ImageIO.read(jar.getInputStream(new ZipEntry("icon.png"))));
-				capsule.setConfigElement(root);
-				capsules.add(capsule);
+				
+				/*A null capsule can be returned if that capsule is already
+				 * loaded*/
+				if(capsule != null){
+					capsule.setIcon(ImageIO.read(jar.getInputStream(new ZipEntry("icon.png"))));
+					capsule.setConfigElement(root);
+					capsules.add(capsule);
+				}
+	
 				
 				/*Publish the temporary results*/
 				publish("Loaded " + filename);

@@ -1,11 +1,13 @@
 package ubisoa.activecloud.services;
 
-import hu.netmind.persistence.StoreException;
-
-import java.util.List;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.Properties;
 
 import org.apache.log4j.Logger;
 
+import ubisoa.activecloud.exceptions.CapsuleAlreadyLoadedException;
 import ubisoa.activecloud.hal.capsules.Capsule;
 
 /**
@@ -13,27 +15,36 @@ import ubisoa.activecloud.hal.capsules.Capsule;
  * available to the end user updated. NodeAccessService is a singleton class*/
 public final class NodeAccessService{
 	private static NodeAccessService singleton;
+	private Properties properties;
 	private static Logger log = Logger.getLogger(NodeAccessService.class);
 	
-	private NodeAccessService(){}
+	private NodeAccessService(){
+		properties = new Properties();
+		try{
+			log.debug("loading loadedcapsules.properties");
+			properties.load(new FileInputStream
+					("loadedcapsules.properties"));
+			log.debug("Clearing loadedcapsules file");
+			properties.clear();
+			log.debug("Saving clear loadedcapsules file");
+			properties.store(new FileOutputStream("loadedcapsules.properties"), 
+					null);
+		} catch (IOException ioe) {
+			log.error(ioe.getMessage());
+		}
+	}
 	
-	@SuppressWarnings("unchecked")
 	public boolean isCapsuleLoaded(Capsule capsule){
-		List capsules = StoreService.get().getStore().find("find capsule where className = ?", 
-				new Object[]{capsule.getClassName()});
-		if(capsules.isEmpty())
-			return false;
-		else
+		if(properties.containsKey(capsule.getClassName()))
 			return true;
+		return false;
 	}
 	
 	public void saveCapsule(Capsule capsule){
-		try{
-			StoreService.get().getStore().save(capsule);
-			log.info("Saved capsule "+capsule.getClassName());
-		} catch (StoreException ste) {
-			log.error(ste.getMessage());
-		}
+		if(isCapsuleLoaded(capsule))
+			throw new CapsuleAlreadyLoadedException("The key "
+					+capsule.getClassName()+" is present in the properties file");
+		properties.setProperty(capsule.getClassName(), "1");
 	}
 
 	public static NodeAccessService get(){
