@@ -8,12 +8,12 @@ import java.io.File;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
-import javax.swing.JTabbedPane;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
 
@@ -21,7 +21,7 @@ import org.apache.log4j.Logger;
 
 import ubisoa.activecloud.hal.filesystem.CapsuleEvent;
 import ubisoa.activecloud.hal.filesystem.CapsuleEventListener;
-import ubisoa.activecloud.hal.filesystem.FileSystemWatcher;
+import ubisoa.activecloud.services.FileSystemService;
 
 public class CapsuleLoaderTest extends JFrame implements CapsuleEventListener{
 	private static final long serialVersionUID = 5452960029326248074L;
@@ -32,10 +32,10 @@ public class CapsuleLoaderTest extends JFrame implements CapsuleEventListener{
 	private JSplitPane splitPane;
 	private JPanel buttonPanel;
 	private JPanel imageViewer;
-	private JTabbedPane configTabs;
+	private JPanel configUI;
 	private JScrollPane imageScroll;
 	private JProgressBar progressBar;
-	private FileSystemWatcher fsw;
+	private FileSystemService fsw;
 	
 	private static final Logger log = Logger.getLogger(CapsuleLoaderTest.class);;
 	
@@ -45,7 +45,7 @@ public class CapsuleLoaderTest extends JFrame implements CapsuleEventListener{
 	}
 	
 	private void initComponents(){
-		fsw = new FileSystemWatcher();
+		fsw = new FileSystemService(1000);
 		fsw.addCapsuleEventListener(this);
 		
 		this.setLayout(new BorderLayout());
@@ -75,9 +75,11 @@ public class CapsuleLoaderTest extends JFrame implements CapsuleEventListener{
 		imageScroll.setPreferredSize(new Dimension(146,600));
 		imageScroll.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
 		imageScroll.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
-		configTabs = new JTabbedPane();
+		configUI = new JPanel();
+		configUI.setLayout(new BorderLayout());
+		configUI.add(new JLabel("Hello from CapsuleLoaderTest"), BorderLayout.CENTER);
 		splitPane.add(imageScroll);
-		splitPane.add(configTabs);
+		splitPane.add(configUI);
 		
 		this.add(splitPane, BorderLayout.CENTER);
 		this.add(buttonPanel, BorderLayout.SOUTH);
@@ -101,8 +103,8 @@ public class CapsuleLoaderTest extends JFrame implements CapsuleEventListener{
 	}
 
 	public void CapsuleEventOcurred(CapsuleEvent ce) {
-		final String[] addedJars = ce.getAddedJars();
-		new CapsuleLoaderWorker(imageViewer, progressBar, addedJars).execute();
+		new CapsuleLoaderWorker(imageViewer, progressBar, configUI, ce.getAddedJars())
+			.execute();
 	}
 	
 	private void startMonitoring(){
@@ -111,7 +113,7 @@ public class CapsuleLoaderTest extends JFrame implements CapsuleEventListener{
 		if(f.isDirectory()){
 			try{
 				fsw.initFileSystem(f.getAbsolutePath());
-				fsw.startWatching(1000);
+				fsw.start();
 				load.setEnabled(false);
 				load.setText("Monitoring...");
 			} catch (Exception e) {

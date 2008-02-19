@@ -1,4 +1,4 @@
-package ubisoa.activecloud.hal.filesystem;
+package ubisoa.activecloud.services;
 
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -19,30 +19,39 @@ import javax.swing.event.EventListenerList;
 
 import org.apache.log4j.Logger;
 
+import ubisoa.activecloud.hal.filesystem.CapsuleEvent;
+import ubisoa.activecloud.hal.filesystem.CapsuleEventListener;
+import ubisoa.activecloud.hal.filesystem.JARFilter;
+
 /**
  * Watch a directory for new files. A target directory is set and
  * a thread runs indefinitely, polling the filesystem for newly added files. If
  * a suitable file (e.g. JAR) is found, a NewFilesystemCapsule event is
  * raised.
  * */
-public class FileSystemWatcher extends TimerTask{
-    private static Logger log = Logger.getLogger(FileSystemWatcher.class);
+public class FileSystemService extends TimerTask{
+    private static Logger log = Logger.getLogger(FileSystemService.class);
     
     private EventListenerList listeners = new EventListenerList();
 	private String folderToWatch;
 	private File file;
+	private int timeInterval;
+	private boolean running;
 	Map<String, File> listOfFiles = new HashMap<String, File>();
 	Map<String, File> newListOfFiles = new HashMap<String, File>();
 	Timer t;
 	
-	public FileSystemWatcher(){
+	public FileSystemService(int timeInterval){
 		super();
+		this.timeInterval = timeInterval;
 	}
 	
 	/**Class constructor
 	 * @param	folderToWatch	The folder that will be polled for added
 	 * or deleted files*/
-	public FileSystemWatcher(String folderToWatch){
+	public FileSystemService(int timeInterval, String folderToWatch){
+		super();
+		this.timeInterval = timeInterval;
 		try{
 			initFileSystem(folderToWatch);	
 		} catch (Exception e) {
@@ -120,18 +129,28 @@ public class FileSystemWatcher extends TimerTask{
 	 * Start watching the filesystem for added or deleted files
 	 * @param	timeInterval	The time interval for polling the filesystem
 	 * */
-	public void startWatching(int timeInterval){
+	public boolean start(){
 		
 		t = new Timer();
 		t.scheduleAtFixedRate(this, 0, timeInterval);
+		running = true;
+		return true;
 	}
 	
 	/**
 	 * Stop watching the filesystem
 	 * */
-	public void stopWatching(){
-		if(t != null)
+	public boolean stop(){
+		if(t != null){
 			t.cancel();
+			running = false;
+			return true;
+		}
+		return false;
+	}
+	
+	public boolean isRunning(){
+		return running;
 	}
 	
 	/**
@@ -203,7 +222,7 @@ public class FileSystemWatcher extends TimerTask{
 		Map<String, File> map = new HashMap<String, File>();
 		for(File key: files){
 			//Verify that the file is indeed a capsule, if not, don't bother
-			if(FileSystemWatcher.isCapsule(key))
+			if(FileSystemService.isCapsule(key))
 				map.put(key.getPath(), key);
 		}
 		return map;
