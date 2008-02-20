@@ -4,7 +4,7 @@ TODO:
 las capsulas y cargue los recursos a memoria. -- HECHO --
 
 * Implementar registro de capsulas cargadas al sistema, una base de datos utilizando 
-BeanKeeper
+BeanKeeper -- HECHO -- Se utilizo un archivo de propiedades en vez de BeanKeeper
 
 * Filesystemwatcher envia eventos para cada JAR agregado o eliminado del filesystem.
 CapsuleLoader debe escuchar esos eventos y cuando detecte una nueva capsula en el
@@ -14,7 +14,18 @@ capsulas las inserta al classpath y las carga a la GUI
 
 * Las capsulas deben tener un archivo config.xml que indica la configuracion de la
 capsula (nombre de la clase, parametros). Debe contener un archivo llamado icon.png
-que sirve para colocar un icono en la GUI. 
+que sirve para colocar un icono en la GUI. -- HECHO -- 
 
 * Actualizar ICapsule para agregar metodo
-getConfigGUI que regrese un JPanel con la GUI de la configuracion
+getConfigGUI que regrese un JPanel con la GUI de la configuracion -- HECHO --
+
+* Modificar FileSystemService para que concuerde con la definicion de Servicio.
+Investigar si es posible implementar IService que force a sus implementaciones a ser
+singleton -- HECHO --
+
+* Implementar TinyOS1Capsule, que a su vez utiliza SerialForwarder para comunicarse
+con motas conectadas al puerto serie.
+
+* Implementar RequestQueueService, que es una cola de peticiones a las capsulas cargadas
+y se encarga de ejecutarlas. Hay que implementar un protocolo sencillo para recibir 
+peticiones

@@ -1,16 +1,13 @@
-package ubisoa.activecloud.hal.capsuleloader;
+package ubisoa.activecloud.gui;
 
 import java.awt.BorderLayout;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.jar.JarFile;
-import java.util.zip.ZipEntry;
 
-import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -19,11 +16,9 @@ import javax.swing.JProgressBar;
 
 import org.apache.log4j.Logger;
 import org.jdesktop.swingworker.SwingWorker;
-import org.jdom.Document;
-import org.jdom.Element;
-import org.jdom.input.SAXBuilder;
 
 import ubisoa.activecloud.hal.capsules.ICapsule;
+import ubisoa.activecloud.services.NodeAccessService;
 
 public class CapsuleLoaderWorker extends SwingWorker<List<ICapsule>, String>{
 	private static Logger log = Logger.getLogger(CapsuleLoaderWorker.class);
@@ -110,41 +105,19 @@ public class CapsuleLoaderWorker extends SwingWorker<List<ICapsule>, String>{
 		int n = 0;
 		for(String filename : filenames){
 			try{
-				CapsuleLoader loader = new CapsuleLoader();
-				/*The given filenames are those of Capsules, we need to extract
-				 * the image file and return it as a list. By convention the
-				 * image file must be named icon.png*/
-				JarFile jar = new JarFile(new File(filename));
-				SAXBuilder builder = new SAXBuilder();
-				Document doc = builder.build(jar.getInputStream(
-						new ZipEntry("config.xml")));
-				Element root = doc.getRootElement();
-				
-				//Add the capsule to the classpath
-				ClassPathHacker.addFile(filename);
-				
-				/*Create the capsule object representation
-				 * from the files previously readed*/
-				ICapsule capsule = (ICapsule)loader.initClass("capsule", ICapsule.class, root);
-				
-				/*A null capsule can be returned if that capsule is already
-				 * loaded*/
-				if(capsule != null){
-					capsule.setIcon(ImageIO.read(jar.getInputStream(new ZipEntry("icon.png"))));
-					capsule.setConfigElement(root);
-					capsules.add(capsule);
-				}
-	
+				capsules.add(NodeAccessService.get().loadCapsule(
+						new JarFile(new File(filename))));
 				
 				/*Publish the temporary results*/
 				publish("Loaded " + filename);
 				n++;
 				log.debug("Progress Value: "+n);
 				progressBar.setValue(n);
-			} catch (IOException ioe) {
+			} catch (Exception ioe) {
 				log.error(ioe.getMessage());
-				JOptionPane.showMessageDialog(null, ioe.getMessage(), 
-						"Error", JOptionPane.ERROR_MESSAGE);
+				JOptionPane.showMessageDialog(null, "You can only load a capsule once.\n" +
+						"Please try with another one.", 
+						"Capsule already there...", JOptionPane.ERROR_MESSAGE);
 			}
 		}
 		return capsules;

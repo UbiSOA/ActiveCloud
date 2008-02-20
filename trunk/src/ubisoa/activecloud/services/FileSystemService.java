@@ -30,33 +30,19 @@ import ubisoa.activecloud.hal.filesystem.JARFilter;
  * raised.
  * */
 public class FileSystemService extends TimerTask{
+	private static FileSystemService singleton;
     private static Logger log = Logger.getLogger(FileSystemService.class);
     
     private EventListenerList listeners = new EventListenerList();
 	private String folderToWatch;
 	private File file;
-	private int timeInterval;
 	private boolean running;
 	Map<String, File> listOfFiles = new HashMap<String, File>();
 	Map<String, File> newListOfFiles = new HashMap<String, File>();
 	Timer t;
 	
-	public FileSystemService(int timeInterval){
+	private FileSystemService(){
 		super();
-		this.timeInterval = timeInterval;
-	}
-	
-	/**Class constructor
-	 * @param	folderToWatch	The folder that will be polled for added
-	 * or deleted files*/
-	public FileSystemService(int timeInterval, String folderToWatch){
-		super();
-		this.timeInterval = timeInterval;
-		try{
-			initFileSystem(folderToWatch);	
-		} catch (Exception e) {
-			log.error(e.getMessage());
-		}
 	}
 	
 	/**Start watching the directory*/
@@ -129,12 +115,17 @@ public class FileSystemService extends TimerTask{
 	 * Start watching the filesystem for added or deleted files
 	 * @param	timeInterval	The time interval for polling the filesystem
 	 * */
-	public boolean start(){
+	public void start(int timeInterval, String folderToWatch){
 		
 		t = new Timer();
 		t.scheduleAtFixedRate(this, 0, timeInterval);
 		running = true;
-		return true;
+		
+		try{
+			initFileSystem(folderToWatch);	
+		} catch (Exception e) {
+			log.error(e.getMessage());
+		}
 	}
 	
 	/**
@@ -228,7 +219,7 @@ public class FileSystemService extends TimerTask{
 		return map;
 	}
 	
-	public void initFileSystem(String path) throws Exception{
+	private void initFileSystem(String path) throws Exception{
 		/*This block gets the directory listing and adds every file
 		 * to the listOfFiles map, using its path as the key and the
 		 * file as the value*/
@@ -245,5 +236,12 @@ public class FileSystemService extends TimerTask{
 		} else {
 			throw new Exception("Given path is not a directory");
 		}
+	}
+	
+	public static FileSystemService get(){
+		if(singleton == null){
+			singleton = new FileSystemService();
+		}
+		return singleton;
 	}
 }

@@ -6,47 +6,24 @@ import java.io.IOException;
 import org.apache.log4j.Logger;
 import org.jdom.Attribute;
 import org.jdom.Element;
-import org.jdom.output.Format;
-import org.jdom.output.XMLOutputter;
 
+import ubisoa.activecloud.exceptions.CapsuleInitException;
 import ubisoa.activecloud.exceptions.InvalidCapsuleException;
-import ubisoa.activecloud.hal.capsules.Capsule;
 import ubisoa.activecloud.hal.capsules.ICapsule;
-import ubisoa.activecloud.services.NodeAccessService;
 
 public class CapsuleLoader {
     private static Logger log = Logger.getLogger(CapsuleLoader.class);
 	
 	public Object initClass(String elementName, Class<ICapsule> theClass, Element root)
-	throws Exception{
+	throws InvalidCapsuleException, CapsuleInitException{
 		if(root == null){
 			log.error("No '"+elementName+"' element in parameter file");
 			throw new InvalidCapsuleException("No '"+elementName+"' element in parameter file");
 		}
-		
-		Element hal = root.getChild("hal");
-		Element ns = root.getChild("ns");
 
 		Object o = null;
-		Capsule c;
-		
-		if(hal != null){
-			c = new Capsule();
-			c.setClassName(hal.getAttributeValue("class"));
-			if(!NodeAccessService.get().isCapsuleLoaded(c))
-				o = doInstance(hal);
-		}
-		else if(ns != null){
-			c = new Capsule();
-			c.setClassName(ns.getAttributeValue("class"));
-			if(!NodeAccessService.get().isCapsuleLoaded(c))
-				o = doInstance(ns);
-		}
-		else{
-			XMLOutputter output = new XMLOutputter();
-			output.setFormat(Format.getPrettyFormat());
-			log.info(output.outputString(root));
-			throw new InvalidCapsuleException("config.xml is not of HAL or NS type.");
+		if(!root.getChildren().isEmpty()){
+			o = doInstance((Element)root.getChildren().get(0));
 		}
 		
 		//Check for correct instance
@@ -58,23 +35,32 @@ public class CapsuleLoader {
 			/*The capsule got correctly loaded, we'll save it to the 
 			 * db of running capsules so we don't load it again.*/
 			((ICapsule)o).init(root);
-			NodeAccessService.get().saveCapsule(c);
 		}
 
 		return o;
 	}
 	
-	private Object doInstance(Element e) throws Exception{
+	private Object doInstance(Element e) throws InvalidCapsuleException{
 		//Get class attribute from XML
 		Attribute classAtt = e.getAttribute("class");
 		if(classAtt == null){
 			log.error("No 'class' Attribute found in element");
-			throw new Exception("No 'class' Attribute");
+			throw new InvalidCapsuleException("No 'class' Attribute");
 		}
 
 		//Make the instance
 		String className = classAtt.getValue();
-		Object o = Class.forName(className).newInstance();
+		Object o = null;
+		
+		try{
+			o = Class.forName(className).newInstance();	
+		} catch (ClassNotFoundException cnfe){
+			log.error(cnfe.getMessage());
+		} catch (IllegalAccessException iae){
+			log.error(iae.getMessage());
+		} catch (InstantiationException ie){
+			log.error(ie.getMessage());
+		}
 
 		return o;
 	}

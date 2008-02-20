@@ -1,4 +1,4 @@
-package ubisoa.activecloud.hal.capsuleloader;
+package ubisoa.activecloud.gui;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
@@ -35,7 +35,6 @@ public class CapsuleLoaderTest extends JFrame implements CapsuleEventListener{
 	private JPanel configUI;
 	private JScrollPane imageScroll;
 	private JProgressBar progressBar;
-	private FileSystemService fsw;
 	
 	private static final Logger log = Logger.getLogger(CapsuleLoaderTest.class);;
 	
@@ -45,8 +44,7 @@ public class CapsuleLoaderTest extends JFrame implements CapsuleEventListener{
 	}
 	
 	private void initComponents(){
-		fsw = new FileSystemService(1000);
-		fsw.addCapsuleEventListener(this);
+		FileSystemService.get().addCapsuleEventListener(this);
 		
 		this.setLayout(new BorderLayout());
 		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -112,8 +110,7 @@ public class CapsuleLoaderTest extends JFrame implements CapsuleEventListener{
 		log.info("Monitoring: "+f.getAbsolutePath());
 		if(f.isDirectory()){
 			try{
-				fsw.initFileSystem(f.getAbsolutePath());
-				fsw.start();
+				FileSystemService.get().start(1000, f.getAbsolutePath());
 				load.setEnabled(false);
 				load.setText("Monitoring...");
 			} catch (Exception e) {
