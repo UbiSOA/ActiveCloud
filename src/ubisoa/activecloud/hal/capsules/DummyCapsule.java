@@ -8,6 +8,11 @@ import javax.swing.JPanel;
 import org.apache.log4j.Logger;
 import org.jdom.Element;
 
+import ubisoa.activecloud.exceptions.CapsuleInitException;
+import ubisoa.activecloud.exceptions.SendException;
+import ubisoa.activecloud.exceptions.StartException;
+import ubisoa.activecloud.exceptions.StopException;
+
 
 public class DummyCapsule implements ICapsule{
     private org.apache.log4j.Logger log = Logger
@@ -21,27 +26,27 @@ public class DummyCapsule implements ICapsule{
     }
     
     @Override
-	public void init(Element e) throws Exception {
+	public void init(Element e) throws CapsuleInitException {
 		log.info("init called");
 	}
 
     @Override
-	public void send(byte[] data) throws Exception {
+	public void send(byte[] data) throws SendException {
 		log.info("send called");
 	}
 
     @Override
-	public void start() throws Exception {
+	public void start() throws StartException {
 		log.info("start called");
 	}
 
     @Override
-	public void stop() throws Exception {
+	public void stop() throws StopException {
 		log.info("stop called");
 	}
 
     @Override
-	public void subscribe(Object o) throws Exception {
+	public void subscribe(Object o){
 		log.info("subscribe called");
 	}
 

@@ -1,4 +1,4 @@
-package ubisoa.activecloud.hal.filesystem;
+package ubisoa.activecloud.gui;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
@@ -15,6 +15,8 @@ import javax.swing.SwingUtilities;
 
 import org.apache.log4j.Logger;
 
+import ubisoa.activecloud.hal.filesystem.CapsuleEvent;
+import ubisoa.activecloud.hal.filesystem.CapsuleEventListener;
 import ubisoa.activecloud.services.FileSystemService;
 
 public class FileSystemTest extends JFrame{
@@ -23,7 +25,6 @@ public class FileSystemTest extends JFrame{
 	private JScrollPane scrollPane;
 	private JPanel buttonPanel;
 	private JTextArea textArea;
-	private FileSystemService fsw;
 	private JButton start;
 	private JButton stop;
 	
@@ -33,13 +34,6 @@ public class FileSystemTest extends JFrame{
 	}
 	
 	private void initComponents(){
-		try{
-			fsw = new FileSystemService(1000,"/Users/cesarolea");
-		} catch (Exception e) {
-			log.error(e.getMessage());
-			fsw.stop();
-		}
-		
 		/*Prepare the button panel*/
 		buttonPanel = new JPanel();
 		buttonPanel.setLayout(new FlowLayout());
@@ -79,7 +73,7 @@ public class FileSystemTest extends JFrame{
 			}
 		});
 		
-		fsw.addCapsuleEventListener(new CapsuleEventListener(){
+		FileSystemService.get().addCapsuleEventListener(new CapsuleEventListener(){
 			public void CapsuleEventOcurred(CapsuleEvent evt){
 				fswCapsuleEventOcurred(evt);
 			}
@@ -87,15 +81,15 @@ public class FileSystemTest extends JFrame{
 	}
 	
 	private void startButtonActionPerformed(ActionEvent evt){
-		if(fsw != null)
-			fsw.start();
+		if(!FileSystemService.get().isRunning())
+			FileSystemService.get().start(1000, "/Users/cesarolea");
 		else
 			log.error("FileSystemService is null");
 	}
 	
 	private void stopButtonActionPerformed(ActionEvent evt){
-		if(fsw != null)
-			fsw.stop();
+		if(FileSystemService.get().isRunning())
+			FileSystemService.get().stop();
 		else
 			log.error("FileSystemService is null");
 	}
