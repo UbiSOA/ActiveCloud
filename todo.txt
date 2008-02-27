@@ -1,6 +1,6 @@
 TODO:
 
-* Averiguar como cargar recursos de un JAR espec�fico, o hacer rutina que descomprima
+* Averiguar como cargar recursos de un JAR específico, o hacer rutina que descomprima
 las capsulas y cargue los recursos a memoria. -- HECHO --
 
 * Implementar registro de capsulas cargadas al sistema, una base de datos utilizando 
@@ -29,3 +29,17 @@ con motas conectadas al puerto serie.
 * Implementar RequestQueueService, que es una cola de peticiones a las capsulas cargadas
 y se encarga de ejecutarlas. Hay que implementar un protocolo sencillo para recibir 
 peticiones
+
+* Investigar a que le pega el cambio de nombre ICapsule a IHardwareCapsule  -- HECHO --
+
+* Modificar NodeAccessService para que soporte INotificationCapsules
+
+* Probar el nuevo capsuleloader
+
+* Un DeliveryService recibe publicaciones de las HCs y mantiene una lista de NSs
+suscritos. Al recibir un mensaje, el DeliveryService itera la lista de NSs suscritos y
+ejecuta su método receive que recibe como argumento un Element y hace lo propio con el
+mensaje. -- HECHO --
+
+* Probar el DeliveryService con un stream de audio y de video. Hacer un NS que reproduce
+el audio recibido en stream por un provider leyendo un mp3.

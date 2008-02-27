@@ -17,12 +17,12 @@ import org.jdom.input.SAXBuilder;
 import org.jdom.output.Format;
 import org.jdom.output.XMLOutputter;
 
+import ubisoa.activecloud.capsules.IHardwareCapsule;
 import ubisoa.activecloud.exceptions.CapsuleAlreadyLoadedException;
 import ubisoa.activecloud.exceptions.CapsuleInitException;
 import ubisoa.activecloud.exceptions.InvalidCapsuleException;
 import ubisoa.activecloud.hal.capsuleloader.CapsuleLoader;
 import ubisoa.activecloud.hal.capsuleloader.ClassPathHacker;
-import ubisoa.activecloud.hal.capsules.ICapsule;
 
 /**
  * The Node Access Service (NAS) maintains the hardware repository and keeps the services
@@ -31,12 +31,14 @@ public final class NodeAccessService{
 	private static NodeAccessService singleton;
 	private Properties properties;
 	private CapsuleLoader loader;
+	private int loadedCapsules = 0;
 	private static Logger log = Logger.getLogger(NodeAccessService.class);
 	
 	private NodeAccessService(){
 		loader = new CapsuleLoader();
 		properties = new Properties();
 		try{
+			log.debug("Initializing loadedCapsules counter: "+loadedCapsules);
 			log.debug("loading loadedcapsules.properties");
 			properties.load(new FileInputStream
 					("loadedcapsules.properties"));
@@ -60,13 +62,14 @@ public final class NodeAccessService{
 		if(isCapsuleLoaded(capsule))
 			throw new CapsuleAlreadyLoadedException("The key "
 					+capsule+" is present in the properties file");
-		properties.setProperty(capsule, "1");
+		properties.setProperty(capsule, Integer.toString(loadedCapsules));
+		loadedCapsules++;
 		log.debug("Saved property? "+properties.containsKey(capsule));
 	}
 	
-	public ICapsule loadCapsule(JarFile capsule){
+	public IHardwareCapsule loadCapsule(JarFile capsule){
 		SAXBuilder builder = new SAXBuilder();
-		ICapsule cap = null;
+		IHardwareCapsule cap = null;
 		
 		try{
 			Document doc = builder.build(capsule.getInputStream(
@@ -78,7 +81,8 @@ public final class NodeAccessService{
 			
 			/*Create the capsule object representation
 			 * from the files previously readed*/
-			cap = (ICapsule)loader.initClass("capsule", ICapsule.class, root);
+			cap = (IHardwareCapsule)loader.initHardwareCapsule("capsule", 
+					root, loadedCapsules);
 			
 			/*A null capsule can be returned if that capsule is already
 			 * loaded*/

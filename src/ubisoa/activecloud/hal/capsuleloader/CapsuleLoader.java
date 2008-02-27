@@ -7,14 +7,15 @@ import org.apache.log4j.Logger;
 import org.jdom.Attribute;
 import org.jdom.Element;
 
+import ubisoa.activecloud.capsules.IHardwareCapsule;
+import ubisoa.activecloud.capsules.INotificationCapsule;
 import ubisoa.activecloud.exceptions.CapsuleInitException;
 import ubisoa.activecloud.exceptions.InvalidCapsuleException;
-import ubisoa.activecloud.hal.capsules.ICapsule;
 
 public class CapsuleLoader {
     private static Logger log = Logger.getLogger(CapsuleLoader.class);
 	
-	public Object initClass(String elementName, Class<ICapsule> theClass, Element root)
+	public Object initHardwareCapsule(String elementName, Element root, int id)
 	throws InvalidCapsuleException, CapsuleInitException{
 		if(root == null){
 			log.error("No '"+elementName+"' element in parameter file");
@@ -27,6 +28,7 @@ public class CapsuleLoader {
 		}
 		
 		//Check for correct instance
+		Class<IHardwareCapsule> theClass = IHardwareCapsule.class;
 		if(o != null){
 			if(!theClass.isInstance(o)){
 				log.error("Not an "+theClass.getName()+" class: "+o.getClass().getName());
@@ -34,7 +36,34 @@ public class CapsuleLoader {
 			}
 			/*The capsule got correctly loaded, we'll save it to the 
 			 * db of running capsules so we don't load it again.*/
-			((ICapsule)o).init(root);
+			((IHardwareCapsule)o).init(root,id);
+		}
+
+		return o;
+	}
+	
+	public Object initClass(String elementName, Element root)
+	throws InvalidCapsuleException, CapsuleInitException{
+		if(root == null){
+			log.error("No '"+elementName+"' element in parameter file");
+			throw new InvalidCapsuleException("No '"+elementName+"' element in parameter file");
+		}
+
+		Object o = null;
+		if(!root.getChildren().isEmpty()){
+			o = doInstance((Element)root.getChildren().get(0));
+		}
+		
+		//Check for correct instance
+		Class<INotificationCapsule> theClass = INotificationCapsule.class;
+		if(o != null){
+			if(!theClass.isInstance(o)){
+				log.error("Not an "+theClass.getName()+" class: "+o.getClass().getName());
+				throw new InvalidCapsuleException("Not an "+theClass.getName()+" class: "+o.getClass().getName());
+			}
+			/*The capsule got correctly loaded, we'll save it to the 
+			 * db of running capsules so we don't load it again.*/
+			((INotificationCapsule)o).init(root);
 		}
 
 		return o;
@@ -76,7 +105,7 @@ public class CapsuleLoader {
 		CapsuleLoader loader = new CapsuleLoader();
 		try{
 			//This should fail because the jar is not there
-			ICapsule capsule = (ICapsule)loader.initClass("capsule",ICapsule.class,plugin);
+			IHardwareCapsule capsule = (IHardwareCapsule)loader.initHardwareCapsule("capsule",plugin,0);
 			capsule.start();
 			capsule.stop();
 		}catch (Exception e){
@@ -87,7 +116,7 @@ public class CapsuleLoader {
 			//This should NOT fail
 			ClassPathHacker.addFile(new File("/home/cesar/Desktop/tinyos1x.jar"));
 			ClassPathHacker.addFile(new File("/home/cesar/jars/HCSim.jar"));
-			ICapsule capsule = (ICapsule)loader.initClass("capsule", ICapsule.class, plugin);
+			IHardwareCapsule capsule = (IHardwareCapsule)loader.initHardwareCapsule("capsule", plugin,0);
 			capsule.start();
 			capsule.stop();
 		} catch(IOException ioe) {
