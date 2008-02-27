@@ -176,7 +176,7 @@ public class FileSystemService extends TimerTask{
 	 * 	<li>Have a config.xml file in its root folder</li>
 	 * 	<li>Have an icon.png that represents the capsule in the GUI. This icon should
 	 * 		measure 128x128</li>
-	 * 	<li>The class specified in its config.xml file must implement ICapsule</li>
+	 * 	<li>The class specified in its config.xml file must implement IHardwareCapsule</li>
 	 * </ul>
 	 * @param	jarFile	The file to be verified as capsule
 	 * @return	True if the file meets the criteria for a capsule

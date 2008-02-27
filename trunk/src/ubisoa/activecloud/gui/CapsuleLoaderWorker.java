@@ -17,10 +17,10 @@ import javax.swing.JProgressBar;
 import org.apache.log4j.Logger;
 import org.jdesktop.swingworker.SwingWorker;
 
-import ubisoa.activecloud.hal.capsules.ICapsule;
+import ubisoa.activecloud.capsules.IHardwareCapsule;
 import ubisoa.activecloud.services.NodeAccessService;
 
-public class CapsuleLoaderWorker extends SwingWorker<List<ICapsule>, String>{
+public class CapsuleLoaderWorker extends SwingWorker<List<IHardwareCapsule>, String>{
 	private static Logger log = Logger.getLogger(CapsuleLoaderWorker.class);
 	private JPanel viewer;
 	private JPanel configUI;
@@ -39,7 +39,7 @@ public class CapsuleLoaderWorker extends SwingWorker<List<ICapsule>, String>{
 	@Override
 	protected void done(){
 		try{
-			for(final ICapsule capsule : get()){
+			for(final IHardwareCapsule capsule : get()){
 				JLabel capsuleLabel = new JLabel(new ImageIcon(capsule.getIcon()));
 				capsuleLabel.addMouseListener(new MouseListener(){
 					@Override
@@ -97,8 +97,8 @@ public class CapsuleLoaderWorker extends SwingWorker<List<ICapsule>, String>{
 
 	//This runs in a background thread
 	@Override
-	protected List<ICapsule> doInBackground() throws Exception {
-		List<ICapsule> capsules = new ArrayList<ICapsule>();
+	protected List<IHardwareCapsule> doInBackground() throws Exception {
+		List<IHardwareCapsule> capsules = new ArrayList<IHardwareCapsule>();
 		progressBar.setMaximum(filenames.length);
 		log.debug("Max Progress Value: "+filenames.length);
 		progressBar.setValue(0);
