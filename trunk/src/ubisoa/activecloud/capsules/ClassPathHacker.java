@@ -1,4 +1,4 @@
-package ubisoa.activecloud.hal.capsuleloader;
+package ubisoa.activecloud.capsules;
 
 import java.io.File;
 import java.io.IOException;

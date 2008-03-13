@@ -1,113 +1,106 @@
 package ubisoa.activecloud.services;
 
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
+import java.io.File;
 import java.io.IOException;
-import java.util.Properties;
+import java.util.ArrayList;
 import java.util.jar.JarFile;
 import java.util.zip.ZipEntry;
-
-import javax.imageio.ImageIO;
 
 import org.apache.log4j.Logger;
 import org.jdom.Document;
 import org.jdom.Element;
 import org.jdom.JDOMException;
 import org.jdom.input.SAXBuilder;
-import org.jdom.output.Format;
-import org.jdom.output.XMLOutputter;
 
+import ubisoa.activecloud.capsules.CapsuleLoader;
+import ubisoa.activecloud.capsules.ClassPathHacker;
+import ubisoa.activecloud.capsules.IAction;
+import ubisoa.activecloud.capsules.ICapsule;
 import ubisoa.activecloud.capsules.IHardwareCapsule;
-import ubisoa.activecloud.exceptions.CapsuleAlreadyLoadedException;
+import ubisoa.activecloud.capsules.INotificationCapsule;
+import ubisoa.activecloud.exceptions.ActionInvokeException;
 import ubisoa.activecloud.exceptions.CapsuleInitException;
 import ubisoa.activecloud.exceptions.InvalidCapsuleException;
-import ubisoa.activecloud.hal.capsuleloader.CapsuleLoader;
-import ubisoa.activecloud.hal.capsuleloader.ClassPathHacker;
 
 /**
  * The Node Access Service (NAS) maintains the hardware repository and keeps the services
  * available to the end user updated. NodeAccessService is a singleton class*/
 public final class NodeAccessService{
 	private static NodeAccessService singleton;
-	private Properties properties;
 	private CapsuleLoader loader;
-	private int loadedCapsules = 0;
 	private static Logger log = Logger.getLogger(NodeAccessService.class);
 	
-	private NodeAccessService(){
+	private NodeAccessService() throws CapsuleInitException{
 		loader = new CapsuleLoader();
-		properties = new Properties();
-		try{
-			log.debug("Initializing loadedCapsules counter: "+loadedCapsules);
-			log.debug("loading loadedcapsules.properties");
-			properties.load(new FileInputStream
-					("loadedcapsules.properties"));
-			log.debug("Clearing loadedcapsules file");
-			properties.clear();
-			log.debug("Saving clear loadedcapsules file");
-			properties.store(new FileOutputStream("loadedcapsules.properties"), 
-					null);
-		} catch (IOException ioe) {
-			log.error(ioe.getMessage());
-		}
+	}
+	
+	public int loadedCapsulesSize(){
+		return loader.getCapsulesCount();
+	}
+	
+	public int loadedHardwareCapsulesSize(){
+		return loader.getHardwareCapsulesCount();
+	}
+	
+	public int loadedNotificationCapsulesSize(){
+		return loader.getNotifcationCapsulesCount();
+	}
+	
+	public ArrayList<IHardwareCapsule> getHardwareCapsules(){
+		return loader.getHardwareCapsules();
+	}
+	
+	public ArrayList<INotificationCapsule> getNotificationCapsules(){
+		return loader.getNotificationCapsules();
 	}
 	
 	public boolean isCapsuleLoaded(String capsule){
-		if(properties.containsKey(capsule))
-			return true;
+		//if there are no capsules loaded, it's not there
+		if(loader.getCapsulesCount() == 0){
+			log.debug("CapsuleLoader is reporting 0 capsules loaded so "+capsule
+					+" is not there.");
+			return false;
+		}
+		
+		/*iterate the loaded hardware capsules*/
+		for(IHardwareCapsule cap : loader.getHardwareCapsules()){
+			if(cap.getClass().getCanonicalName().equals(capsule))
+				return true;
+		}
+		
+		/*iterate the loaded notification capsules*/
+		for(INotificationCapsule cap : loader.getNotificationCapsules()){
+			if(cap.getClass().getCanonicalName().equals(capsule))
+				return true;
+		}
+		
+		/*It's not loaded*/
 		return false;
 	}
 	
-	private void saveCapsule(String capsule){
-		if(isCapsuleLoaded(capsule))
-			throw new CapsuleAlreadyLoadedException("The key "
-					+capsule+" is present in the properties file");
-		properties.setProperty(capsule, Integer.toString(loadedCapsules));
-		loadedCapsules++;
-		log.debug("Saved property? "+properties.containsKey(capsule));
-	}
-	
-	public IHardwareCapsule loadCapsule(JarFile capsule){
+	public ICapsule loadCapsule(JarFile capsule) 
+		throws CapsuleInitException, InvalidCapsuleException{
+		log.debug("Loading capsule "+capsule.getName());
 		SAXBuilder builder = new SAXBuilder();
-		IHardwareCapsule cap = null;
 		
 		try{
 			Document doc = builder.build(capsule.getInputStream(
 					new ZipEntry("config.xml")));
 			Element root = doc.getRootElement();
+			Element hal = (Element)root.getChildren().get(0);
+			String className = hal.getAttributeValue("class");
 			
-			//Add the capsule to the classpath
-			ClassPathHacker.addFile(capsule.getName());
-			
-			/*Create the capsule object representation
-			 * from the files previously readed*/
-			cap = (IHardwareCapsule)loader.initHardwareCapsule("capsule", 
-					root, loadedCapsules);
-			
-			/*A null capsule can be returned if that capsule is already
-			 * loaded*/
-			if(cap != null){
-				cap.setIcon(ImageIO.read(capsule.getInputStream(new ZipEntry("icon.png"))));
-				cap.setConfigElement(root);
+			if(!isCapsuleLoaded(className)){
+				//Add the capsule to the classpath
+				ClassPathHacker.addFile(capsule.getName());
 				
-				/*Capsule correctly loaded, save it*/
-				Element hal = root.getChild("hal");
-				Element ns = root.getChild("ns");
-				
-				if(hal != null){
-					log.debug("Saving HAL capsule: "+hal.getAttributeValue("class"));
-					saveCapsule(hal.getAttributeValue("class"));
-				}
-				else if(ns != null){
-					log.debug("Saving NS capsule: "+ns.getAttributeValue("class"));
-					saveCapsule(ns.getAttributeValue("class"));
-				}
-				else{
-					XMLOutputter output = new XMLOutputter();
-					output.setFormat(Format.getPrettyFormat());
-					log.info(output.outputString(root));
-					throw new InvalidCapsuleException("config.xml is not of HAL or NS type.");
-				}
+				/*Create the capsule object representation
+				 * from the files previously readed*/
+				log.debug("Going to CapsuleLoader");
+				return loader.initHardwareCapsule("capsule", root, 
+						loader.getHardwareCapsulesCount(), capsule);	
+			}else{
+				log.error(className + " is reported as beign already loaded, so not loading again");
 			}
 			
 		} catch (JDOMException jde) {
@@ -116,17 +109,44 @@ public final class NodeAccessService{
 			log.error(ioe.getMessage());
 		} catch (InvalidCapsuleException ice) {
 			log.error(ice.getMessage());
-		} catch (CapsuleInitException cie) {
-			log.error(cie.getMessage());
 		}
-		
-		return cap;
+		return null;
+	}
+	
+	public ArrayList<IAction> getActions(int id){
+		return (ArrayList<IAction>)loader.getActions().get(id);
+	}
+	
+	public void invokeAction(String action) throws ActionInvokeException{
+		//
 	}
 
-	public static NodeAccessService get(){
+	public static NodeAccessService get() throws CapsuleInitException{
 		if(singleton == null){
 			singleton = new NodeAccessService();
 		}
 		return singleton;
+	}
+	
+	public static void main(String args[]){
+		String cP = "/home/cesar/Desktop/tinyoscapsule.jar";
+		try{
+			log.debug("Some stats");
+			log.debug("Loaded Capsules: "+NodeAccessService.get().loadedCapsulesSize());
+			log.debug("Is capsule loaded? "+NodeAccessService.get().isCapsuleLoaded("com.divinesoft.activecloud.capsules.TinyOS1Capsule"));
+			log.debug("Trying to load capsule...");
+			NodeAccessService.get().loadCapsule(new JarFile(new File(cP)));
+			Thread.sleep(5000);
+			log.debug("Done loading... getting stats again");
+			log.debug("Some stats");
+			log.debug("Loaded Capsules: "+NodeAccessService.get().loadedCapsulesSize());
+			log.debug("Is capsule loaded? "+NodeAccessService.get().isCapsuleLoaded("com.divinesoft.activecloud.capsules.TinyOS1Capsule"));
+		}catch(CapsuleInitException cie){
+			log.error(cie.getMessage());
+		}catch(IOException ioe){
+			log.error(ioe.getMessage());
+		}catch(Exception e){
+			log.error(e.getMessage());
+		}
 	}
 }

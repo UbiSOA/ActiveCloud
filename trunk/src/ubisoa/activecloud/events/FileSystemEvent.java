@@ -1,14 +1,14 @@
-package ubisoa.activecloud.hal.filesystem;
+package ubisoa.activecloud.events;
 
 import java.util.EventObject;
 
-public class CapsuleEvent extends EventObject{
+public class FileSystemEvent extends EventObject{
 	private static final long serialVersionUID = -2258402404358872576L;
 	
 	private String[] addedJars;
 	private String[] deletedJars;
 	
-	public CapsuleEvent(Object source, String[] addedJars, String[] deletedJars){
+	public FileSystemEvent(Object source, String[] addedJars, String[] deletedJars){
 		super(source);
 		this.addedJars = addedJars;
 		this.deletedJars = deletedJars;

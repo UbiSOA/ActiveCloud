@@ -1,4 +1,4 @@
-package ubisoa.activecloud.hal.filesystem;
+package ubisoa.activecloud.events;
 
 import java.io.File;
 import java.io.FilenameFilter;

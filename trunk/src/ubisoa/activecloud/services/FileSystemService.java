@@ -4,13 +4,7 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
 import java.util.Timer;
-import java.util.TimerTask;
-import java.util.Vector;
 import java.util.jar.JarFile;
 import java.util.zip.ZipEntry;
 
@@ -19,9 +13,8 @@ import javax.swing.event.EventListenerList;
 
 import org.apache.log4j.Logger;
 
-import ubisoa.activecloud.hal.filesystem.CapsuleEvent;
-import ubisoa.activecloud.hal.filesystem.CapsuleEventListener;
-import ubisoa.activecloud.hal.filesystem.JARFilter;
+import ubisoa.activecloud.events.FileSystemEvent;
+import ubisoa.activecloud.events.FileSystemEventListener;
 
 /**
  * Watch a directory for new files. A target directory is set and
@@ -29,86 +22,15 @@ import ubisoa.activecloud.hal.filesystem.JARFilter;
  * a suitable file (e.g. JAR) is found, a NewFilesystemCapsule event is
  * raised.
  * */
-public class FileSystemService extends TimerTask{
+public class FileSystemService{
 	private static FileSystemService singleton;
     private static Logger log = Logger.getLogger(FileSystemService.class);
-    
-    private EventListenerList listeners = new EventListenerList();
-	private String folderToWatch;
-	private File file;
 	private boolean running;
-	Map<String, File> listOfFiles = new HashMap<String, File>();
-	Map<String, File> newListOfFiles = new HashMap<String, File>();
-	Timer t;
+    private EventListenerList listeners = new EventListenerList();
+	private Timer t;
 	
 	private FileSystemService(){
 		super();
-	}
-	
-	/**Start watching the directory*/
-	public void run(){
-		/*At this point, a second has passed since we first
-		 * polled the folder for it's files, let's see if there
-		 * are any new files*/
-		Vector<String> toRemove = new Vector<String>();
-		Vector<String> toAdd = new Vector<String>();
-		
-		if(file != null){
-			
-		}
-		
-		newListOfFiles = getFileMap(file.listFiles(new JARFilter()));
-		System.gc();
-		
-		/*If listOfFiles DOES NOT contains everything from newListOfFiles
-		 * there's a potential new File in there*/
-		Set<String> newKeys = newListOfFiles.keySet();
-		Iterator<String> iterator = newKeys.iterator();
-		while(iterator.hasNext()){
-			String theKey = iterator.next();
-			
-			/*If listOfFiles doesn't contains this key, it's a new file*/
-			if(!listOfFiles.containsKey(theKey)){
-				File newFile = newListOfFiles.get(theKey);
-				listOfFiles.put(theKey, newFile);
-				
-				/*Fire NewJarAdded*/
-				if(!newFile.isDirectory()){
-					toAdd.add(theKey);
-					log.info("New JAR: "+newFile.getName());
-				}
-			}
-		} //end while
-		
-		Set<String> oldKeys = listOfFiles.keySet();
-		iterator = oldKeys.iterator();
-		while(iterator.hasNext()){
-			String theKey = iterator.next();
-			
-			if(!newListOfFiles.containsKey(theKey)){
-				File removedFile = listOfFiles.get(theKey);
-				if(!(removedFile.exists() && removedFile.isDirectory())){
-					/*Save the deleted files so when we are done iterating
-					 * we'll remove them from the map*/
-					toRemove.add(theKey);
-					log.info("Deleted JAR: "+removedFile.getName());	
-				}
-			}
-		} //end while
-		
-		/*Now remove those keys*/
-		iterator = toRemove.iterator();
-		while(iterator.hasNext()){
-			listOfFiles.remove(iterator.next());
-		}
-		
-		if(!(toAdd.isEmpty() && toRemove.isEmpty())){
-			CapsuleEvent evt = new CapsuleEvent(this,(String[])toAdd.toArray(new String[toAdd.size()]), 
-					(String[])toRemove.toArray(new String[toRemove.size()]));
-			fireCapsuleEvent(evt);
-		}
-		
-		System.gc();
 	}
 	
 	/**
@@ -118,14 +40,9 @@ public class FileSystemService extends TimerTask{
 	public void start(int timeInterval, String folderToWatch){
 		
 		t = new Timer();
-		t.scheduleAtFixedRate(this, 0, timeInterval);
+		t.scheduleAtFixedRate(new WatchDirectoryTask(folderToWatch), 0, timeInterval);
 		running = true;
-		
-		try{
-			initFileSystem(folderToWatch);	
-		} catch (Exception e) {
-			log.error(e.getMessage());
-		}
+
 	}
 	
 	/**
@@ -142,29 +59,6 @@ public class FileSystemService extends TimerTask{
 	
 	public boolean isRunning(){
 		return running;
-	}
-	
-	/**
-	 * Registers the object as a CapsuleEventListener. The object will receive
-	 * CapsuleEvents fired.
-	 * */
-	public void addCapsuleEventListener(CapsuleEventListener evt){
-		listeners.add(CapsuleEventListener.class, evt);
-	}
-	
-	/**Removes the object from the CapsuleEventListener list*/
-	public void removeCapsuleEventListener(CapsuleEventListener evt){
-		listeners.remove(CapsuleEventListener.class, evt);
-	}
-	
-	/**Fires a CapsuleEvent event*/
-	protected void fireCapsuleEvent(CapsuleEvent evt){
-		Object[] registeredListeners = listeners.getListenerList();
-		for(int i=0; i<registeredListeners.length; i+=2){
-			if(registeredListeners[i] == CapsuleEventListener.class){
-				((CapsuleEventListener)registeredListeners[i+1]).CapsuleEventOcurred(evt);
-			}
-		}
 	}
 	
 	/**
@@ -209,32 +103,26 @@ public class FileSystemService extends TimerTask{
 		}
 	}
 	
-	private Map<String, File> getFileMap(File[] files){
-		Map<String, File> map = new HashMap<String, File>();
-		for(File key: files){
-			//Verify that the file is indeed a capsule, if not, don't bother
-			if(FileSystemService.isCapsule(key))
-				map.put(key.getPath(), key);
-		}
-		return map;
+	/**
+	 * Registers the object as a FileSystemEventListener. The object will receive
+	 * CapsuleEvents fired.
+	 * */
+	public void addFileSystemEventListener(FileSystemEventListener evt){
+		listeners.add(FileSystemEventListener.class, evt);
 	}
 	
-	private void initFileSystem(String path) throws Exception{
-		/*This block gets the directory listing and adds every file
-		 * to the listOfFiles map, using its path as the key and the
-		 * file as the value*/
-		this.folderToWatch = path;
-		file = new File(this.folderToWatch);
-		
-		if(file.isDirectory()){
-			listOfFiles = getFileMap(file.listFiles(new JARFilter()));
-			/*This event correspond to those capsules already present in
-			 * the filesystem*/
-			CapsuleEvent evt = new CapsuleEvent(this,(String[])listOfFiles.keySet()
-					.toArray(new String[listOfFiles.keySet().size()]),null);
-			fireCapsuleEvent(evt);
-		} else {
-			throw new Exception("Given path is not a directory");
+	/**Removes the object from the FileSystemEventListener list*/
+	public void removeFileSystemEventListener(FileSystemEventListener evt){
+		listeners.remove(FileSystemEventListener.class, evt);
+	}
+	
+	/**Fires a FileSystemEvent event*/
+	protected void fireFileSystemEvent(FileSystemEvent evt){
+		Object[] registeredListeners = listeners.getListenerList();
+		for(int i=0; i<registeredListeners.length; i+=2){
+			if(registeredListeners[i] == FileSystemEventListener.class){
+				((FileSystemEventListener)registeredListeners[i+1]).fileSystemEventOcurred(evt);
+			}
 		}
 	}
 	
@@ -243,5 +131,10 @@ public class FileSystemService extends TimerTask{
 			singleton = new FileSystemService();
 		}
 		return singleton;
+	}
+	
+	public static void main(String[] args){
+		FileSystemService.get().start(1000, "/home/cesar/media");
+		FileSystemService.get().start(3000, "/home/cesar/Desktop");
 	}
 }

@@ -15,8 +15,8 @@ import javax.swing.SwingUtilities;
 
 import org.apache.log4j.Logger;
 
-import ubisoa.activecloud.hal.filesystem.CapsuleEvent;
-import ubisoa.activecloud.hal.filesystem.CapsuleEventListener;
+import ubisoa.activecloud.events.FileSystemEvent;
+import ubisoa.activecloud.events.FileSystemEventListener;
 import ubisoa.activecloud.services.FileSystemService;
 
 public class FileSystemTest extends JFrame{
@@ -73,8 +73,8 @@ public class FileSystemTest extends JFrame{
 			}
 		});
 		
-		FileSystemService.get().addCapsuleEventListener(new CapsuleEventListener(){
-			public void CapsuleEventOcurred(CapsuleEvent evt){
+		FileSystemService.get().addFileSystemEventListener(new FileSystemEventListener(){
+			public void fileSystemEventOcurred(FileSystemEvent evt){
 				fswCapsuleEventOcurred(evt);
 			}
 		});
@@ -94,7 +94,7 @@ public class FileSystemTest extends JFrame{
 			log.error("FileSystemService is null");
 	}
 	
-	private void fswCapsuleEventOcurred(CapsuleEvent evt){
+	private void fswCapsuleEventOcurred(FileSystemEvent evt){
 		if(evt.getAddedJars().length != 0){
 			final String[] jarsAdded = evt.getAddedJars();
 			log.info("New JAR added");
