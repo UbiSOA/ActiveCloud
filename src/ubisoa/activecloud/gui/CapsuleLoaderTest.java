@@ -19,11 +19,11 @@ import javax.swing.SwingUtilities;
 
 import org.apache.log4j.Logger;
 
-import ubisoa.activecloud.hal.filesystem.CapsuleEvent;
-import ubisoa.activecloud.hal.filesystem.CapsuleEventListener;
+import ubisoa.activecloud.events.FileSystemEvent;
+import ubisoa.activecloud.events.FileSystemEventListener;
 import ubisoa.activecloud.services.FileSystemService;
 
-public class CapsuleLoaderTest extends JFrame implements CapsuleEventListener{
+public class CapsuleLoaderTest extends JFrame implements FileSystemEventListener{
 	private static final long serialVersionUID = 5452960029326248074L;
 	
 	private JButton load;
@@ -44,7 +44,7 @@ public class CapsuleLoaderTest extends JFrame implements CapsuleEventListener{
 	}
 	
 	private void initComponents(){
-		FileSystemService.get().addCapsuleEventListener(this);
+		FileSystemService.get().addFileSystemEventListener(this);
 		
 		this.setLayout(new BorderLayout());
 		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -100,17 +100,21 @@ public class CapsuleLoaderTest extends JFrame implements CapsuleEventListener{
 		startMonitoring();
 	}
 
-	public void CapsuleEventOcurred(CapsuleEvent ce) {
+	public void fileSystemEventOcurred(FileSystemEvent ce) {
+		log.debug("FileSystemEvent received");
 		new CapsuleLoaderWorker(imageViewer, progressBar, configUI, ce.getAddedJars())
 			.execute();
 	}
 	
 	private void startMonitoring(){
 		File f = new File("capsules"+File.separator+"hal");
+		File f2 = new File("capsules"+File.separator+"ns");
 		log.info("Monitoring: "+f.getAbsolutePath());
+		log.info("Monitoring: "+f2.getAbsolutePath());
 		if(f.isDirectory()){
 			try{
-				FileSystemService.get().start(1000, f.getAbsolutePath());
+				FileSystemService.get().start(3000, f.getAbsolutePath());
+				FileSystemService.get().start(3000, f2.getAbsolutePath());
 				load.setEnabled(false);
 				load.setText("Monitoring...");
 			} catch (Exception e) {
@@ -126,11 +130,22 @@ public class CapsuleLoaderTest extends JFrame implements CapsuleEventListener{
 	}
 	
 	public static void main(String args[]){
+		
 		SwingUtilities.invokeLater(new Runnable(){
 			public void run(){
 				new CapsuleLoaderTest().setVisible(true);
 			}
 		});
+		/*
+		Properties p = new Properties();
+		try{
+			p.load(new FileReader("p.properties"));
+			p.setProperty("hola", Integer.toString(0));
+			p.store(new FileOutputStream("p.properties"),null);
+		}catch(Exception e){
+			log.error(e.getMessage());
+		}
+		*/
 	}
 
 }

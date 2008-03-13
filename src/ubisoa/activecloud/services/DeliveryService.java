@@ -1,7 +1,6 @@
 package ubisoa.activecloud.services;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 import org.apache.log4j.Logger;
@@ -23,9 +22,10 @@ public class DeliveryService{
 		 * */
 		log.debug("Selecting observer index "+id+ " of "+ observers.size());
 		List<INotificationCapsule> obs = observers.get(id);
-		Iterator<INotificationCapsule> i = obs.iterator();
-		while(i.hasNext()){
-			i.next().receive(payload);
+		log.debug("Selected Observer: "+obs.getClass().getName());
+		
+		for(INotificationCapsule nc : obs){
+			nc.receive(payload);
 		}
 	}
 	
@@ -44,9 +44,13 @@ public class DeliveryService{
 			 * If there are observers for that id, get the list and append the new
 			 * observer
 			 * */
+			
+			observers.get(id).add(nc);
+			
+			/*
 			List<INotificationCapsule> temp = observers.get(id);
 			temp.add(nc);
-			observers.set(id, temp);
+			observers.set(id, temp);*/
 		}
 	}
 	
