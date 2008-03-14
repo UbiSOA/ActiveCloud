@@ -60,7 +60,7 @@ public class DeliveryService{
 	
 	public static DeliveryService get(){
 		if(singleton == null){
-			log.debug("Creating DeliveryService instance");
+			log.debug("Instantiating "+DeliveryService.class.getName());
 			singleton = new DeliveryService();
 		}
 		return singleton;

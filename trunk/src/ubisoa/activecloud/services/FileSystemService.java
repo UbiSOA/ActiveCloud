@@ -128,6 +128,7 @@ public class FileSystemService{
 	
 	public static FileSystemService get(){
 		if(singleton == null){
+			log.debug("Instantiating "+FileSystemService.class.getName());
 			singleton = new FileSystemService();
 		}
 		return singleton;
