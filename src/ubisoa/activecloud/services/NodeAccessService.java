@@ -14,7 +14,6 @@ import org.jdom.input.SAXBuilder;
 
 import ubisoa.activecloud.capsules.CapsuleLoader;
 import ubisoa.activecloud.capsules.ClassPathHacker;
-import ubisoa.activecloud.capsules.IAction;
 import ubisoa.activecloud.capsules.ICapsule;
 import ubisoa.activecloud.capsules.IHardwareCapsule;
 import ubisoa.activecloud.capsules.INotificationCapsule;
@@ -113,16 +112,24 @@ public final class NodeAccessService{
 		return null;
 	}
 	
-	public ArrayList<IAction> getActions(int id){
-		return (ArrayList<IAction>)loader.getActions().get(id);
-	}
-	
-	public void invokeAction(String action) throws ActionInvokeException{
-		//
+	public void invokeAction(String action, Element params) throws ActionInvokeException{
+		//Get the ID corresponding to the action
+		int[] ids = loader.actionToId(action);
+		int id = ids[0];
+		int actId = ids[1];
+		
+		/*If the action is found inside a loaded capsule, invoke it.
+		 * When an action is not found, actionToId returns -1 in both
+		 * the CapsuleID and ActionID*/
+		if((id >= 0) && (actId >= 0)){
+			IHardwareCapsule c = loader.getHardwareCapsuleAtIndex(id);
+			c.getActions().get(actId).invoke(params);
+		}
 	}
 
 	public static NodeAccessService get() throws CapsuleInitException{
 		if(singleton == null){
+			log.debug("Instantiating "+NodeAccessService.class.getName());
 			singleton = new NodeAccessService();
 		}
 		return singleton;

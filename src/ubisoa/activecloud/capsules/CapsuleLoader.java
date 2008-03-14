@@ -1,7 +1,7 @@
 package ubisoa.activecloud.capsules;
 
 import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
 import java.util.jar.JarFile;
 import java.util.zip.ZipEntry;
 
@@ -20,7 +20,8 @@ public class CapsuleLoader {
     	new ArrayList<IHardwareCapsule>();
     private ArrayList<INotificationCapsule> notificationCapsules =
     	new ArrayList<INotificationCapsule>();
-    private ArrayList<List<IAction>> actions = new ArrayList<List<IAction>>();
+    //private ArrayList<List<IAction>> actions = new ArrayList<List<IAction>>();
+    private HashMap<String,int[]> actionToId = new HashMap<String,int[]>();
     
 	public ICapsule initHardwareCapsule(String elementName, Element root, int id, JarFile j)
 	throws InvalidCapsuleException, CapsuleInitException{
@@ -80,10 +81,6 @@ public class CapsuleLoader {
 		return null;
 	}
 	
-	public ArrayList<List<IAction>> getActions(){
-		return actions;
-	}
-	
 	public ArrayList<IHardwareCapsule> getHardwareCapsules(){
 		return hardwareCapsules;
 	}
@@ -98,6 +95,13 @@ public class CapsuleLoader {
 	
 	public int getNotifcationCapsulesCount(){
 		return notificationCapsules.size();
+	}
+	
+	public int[] actionToId(String action){
+		if(actionToId.containsKey(action))
+			return actionToId.get(action);
+		else
+			return new int[]{-1,-1};
 	}
 	
 	/**Get the number of notification capsules and hardware capsules loaded.
@@ -121,10 +125,14 @@ public class CapsuleLoader {
 	}
 	
 	private void addActions(int id, IHardwareCapsule c){
-		if(actions.size() < id){
-			actions.ensureCapacity(id);
+		//for(IAction a : c.getActions()){
+		for(int i=0; i<c.getActions().size(); i++){
+			IAction a = c.getActions().get(i);
+			if(!(actionToId.containsKey(a.getName())))
+				actionToId.put(a.getName(), new int[]{id,i});
+			else
+				log.debug("Action key "+a.getName()+" already present, not adding it!");
 		}
-		actions.set(id, c.getActions());
 	}
 	
 	private Object doInstance(Element e) throws InvalidCapsuleException, 
