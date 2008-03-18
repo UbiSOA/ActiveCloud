@@ -23,7 +23,7 @@ public class CapsuleLoader {
     //private ArrayList<List<IAction>> actions = new ArrayList<List<IAction>>();
     private HashMap<String,int[]> actionToId = new HashMap<String,int[]>();
     
-	public ICapsule initHardwareCapsule(String elementName, Element root, int id, JarFile j)
+	public ICapsule initCapsule(String elementName, Element root, JarFile j)
 	throws InvalidCapsuleException, CapsuleInitException{
 		Object o = null;
 		
@@ -57,8 +57,9 @@ public class CapsuleLoader {
 					((IHardwareCapsule)o).setIcon(ImageIO.read(j.getInputStream(new ZipEntry("icon.png"))));
 					((IHardwareCapsule)o).setConfigElement(root);
 					log.debug("Adding the initialized capsule to the pool");
-					hardwareCapsules.add(id, ((IHardwareCapsule)o));
-					addActions(id, (IHardwareCapsule)o);
+					hardwareCapsules.add(((IHardwareCapsule)o));
+					log.debug("Added capsule in index "+(hardwareCapsules.size()-1));
+					addActions(hardwareCapsules.size()-1, (IHardwareCapsule)o);
 					return ((IHardwareCapsule)o);
 				}else if(theNotificationClass.isInstance(o)){
 					log.debug("Dealing with a notification capsule...");
@@ -67,7 +68,7 @@ public class CapsuleLoader {
 					((INotificationCapsule)o).setIcon(ImageIO.read(j.getInputStream(new ZipEntry("icon.png"))));
 					((INotificationCapsule)o).setConfigElement(root);
 					log.debug("Adding the initialized capsule to the pool");
-					notificationCapsules.add(id, ((INotificationCapsule)o));
+					notificationCapsules.add(((INotificationCapsule)o));
 					return ((INotificationCapsule)o);
 				}else{
 					log.error("Not a HC nor a NC, I don't know what to do with this");
@@ -97,6 +98,12 @@ public class CapsuleLoader {
 		return notificationCapsules.size();
 	}
 	
+	/**Search the Actions hash and returns the ID of the capsule containing that action
+	 * and the position of the action in it's action array
+	 * @param	action	The action string to search for
+	 * @return			A two position array containing the capsule ID and the action
+	 * position inside the actions array of that capsule, or a two position array
+	 * with values -1,-1 if the action was not found.*/
 	public int[] actionToId(String action){
 		if(actionToId.containsKey(action))
 			return actionToId.get(action);
@@ -125,10 +132,13 @@ public class CapsuleLoader {
 	}
 	
 	private void addActions(int id, IHardwareCapsule c){
-		//for(IAction a : c.getActions()){
 		for(int i=0; i<c.getActions().size(); i++){
 			IAction a = c.getActions().get(i);
 			if(!(actionToId.containsKey(a.getName())))
+				/*The actionToId hash uses the action name as key. The value
+				 * is a two position array with the capsule id in the first
+				 * position and the action position in the capsule's action array
+				 * as second value.*/
 				actionToId.put(a.getName(), new int[]{id,i});
 			else
 				log.debug("Action key "+a.getName()+" already present, not adding it!");
