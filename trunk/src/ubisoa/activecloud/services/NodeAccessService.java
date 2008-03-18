@@ -14,6 +14,7 @@ import org.jdom.input.SAXBuilder;
 
 import ubisoa.activecloud.capsules.CapsuleLoader;
 import ubisoa.activecloud.capsules.ClassPathHacker;
+import ubisoa.activecloud.capsules.IAction;
 import ubisoa.activecloud.capsules.ICapsule;
 import ubisoa.activecloud.capsules.IHardwareCapsule;
 import ubisoa.activecloud.capsules.INotificationCapsule;
@@ -47,6 +48,17 @@ public final class NodeAccessService{
 	
 	public ArrayList<IHardwareCapsule> getHardwareCapsules(){
 		return loader.getHardwareCapsules();
+	}
+	
+	public int getHardwareCapsuleId(String capsule){
+		/*iterate the loaded hardware capsules*/
+		int i = 0;
+		for(IHardwareCapsule cap : loader.getHardwareCapsules()){
+			if(cap.getClass().getCanonicalName().equals(capsule))
+				return i;
+			i++;
+		}
+		return -1;
 	}
 	
 	public ArrayList<INotificationCapsule> getNotificationCapsules(){
@@ -94,10 +106,9 @@ public final class NodeAccessService{
 				ClassPathHacker.addFile(capsule.getName());
 				
 				/*Create the capsule object representation
-				 * from the files previously readed*/
+				 * from the files previously read*/
 				log.debug("Going to CapsuleLoader");
-				return loader.initHardwareCapsule("capsule", root, 
-						loader.getHardwareCapsulesCount(), capsule);	
+				return loader.initCapsule("capsule", root, capsule);	
 			}else{
 				log.error(className + " is reported as beign already loaded, so not loading again");
 			}
@@ -124,7 +135,22 @@ public final class NodeAccessService{
 		if((id >= 0) && (actId >= 0)){
 			IHardwareCapsule c = loader.getHardwareCapsuleAtIndex(id);
 			c.getActions().get(actId).invoke(params);
+		} else {
+			log.debug("Action "+action+" was not found.");
 		}
+	}
+	
+	public ArrayList<String> getActionList(){
+		ArrayList<IHardwareCapsule> hc = loader.getHardwareCapsules();
+		ArrayList<String> tempStrings = new ArrayList<String>();
+
+		for(IHardwareCapsule h : hc){
+			for(IAction action : h.getActions()){
+				tempStrings.add(action.getName());
+			}
+		}
+		
+		return tempStrings;
 	}
 
 	public static NodeAccessService get() throws CapsuleInitException{
