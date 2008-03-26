@@ -100,7 +100,7 @@ public class CapsuleLoaderTest extends JFrame implements FileSystemEventListener
 		startMonitoring();
 	}
 
-	public void fileSystemEventOcurred(FileSystemEvent ce) {
+	public synchronized void fileSystemEventOcurred(FileSystemEvent ce) {
 		log.debug("FileSystemEvent received");
 		new CapsuleLoaderWorker(imageViewer, progressBar, configUI, ce.getAddedJars())
 			.execute();

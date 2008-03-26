@@ -16,14 +16,14 @@ import ubisoa.activecloud.exceptions.InvalidCapsuleException;
 
 public class CapsuleLoader {
     private static Logger log = Logger.getLogger(CapsuleLoader.class);
-    private ArrayList<IHardwareCapsule> hardwareCapsules = 
-    	new ArrayList<IHardwareCapsule>();
-    private ArrayList<INotificationCapsule> notificationCapsules =
-    	new ArrayList<INotificationCapsule>();
+    private ArrayList<HardwareCapsule> hardwareCapsules = 
+    	new ArrayList<HardwareCapsule>();
+    private ArrayList<NotificationCapsule> notificationCapsules =
+    	new ArrayList<NotificationCapsule>();
     //private ArrayList<List<IAction>> actions = new ArrayList<List<IAction>>();
     private HashMap<String,int[]> actionToId = new HashMap<String,int[]>();
     
-	public ICapsule initCapsule(String elementName, Element root, JarFile j)
+	public synchronized ICapsule initCapsule(String elementName, Element root, JarFile j)
 	throws InvalidCapsuleException, CapsuleInitException{
 		Object o = null;
 		
@@ -45,35 +45,35 @@ public class CapsuleLoader {
 			}
 
 			//Check for correct instance
-			Class<IHardwareCapsule> theHardwareClass = IHardwareCapsule.class;
-			Class<INotificationCapsule> theNotificationClass = INotificationCapsule.class;
+			Class<HardwareCapsule> theHardwareClass = HardwareCapsule.class;
+			Class<NotificationCapsule> theNotificationClass = NotificationCapsule.class;
 			
 			if(o != null){
 				//See if it's a hc or nc
 				if(theHardwareClass.isInstance(o)){
 					log.debug("Dealing with a hardware capsule...");
 					log.debug("Making the call to the capsule's init method");
-					((IHardwareCapsule)o).init((Element)root.getChildren().get(0));
-					((IHardwareCapsule)o).setIcon(ImageIO.read(j.getInputStream(new ZipEntry("icon.png"))));
-					((IHardwareCapsule)o).setConfigElement(root);
+					((HardwareCapsule)o).init((Element)root.getChildren().get(0));
+					((HardwareCapsule)o).setIcon(ImageIO.read(j.getInputStream(new ZipEntry("icon.png"))));
+					((HardwareCapsule)o).setConfigElement(root);
 					log.debug("Adding the initialized capsule to the pool");
-					hardwareCapsules.add(((IHardwareCapsule)o));
-					log.debug("Added capsule in index "+(hardwareCapsules.size()-1));
-					addActions(hardwareCapsules.size()-1, (IHardwareCapsule)o);
-					return ((IHardwareCapsule)o);
+					hardwareCapsules.add(((HardwareCapsule)o));
+					log.debug("Added Hardware capsule at index "+(hardwareCapsules.size()-1));
+					addActions(hardwareCapsules.size()-1, (HardwareCapsule)o);
+					return ((HardwareCapsule)o);
 				}else if(theNotificationClass.isInstance(o)){
 					log.debug("Dealing with a notification capsule...");
 					log.debug("Making the call to the capsule's init method");
-					((INotificationCapsule)o).init((Element)root.getChildren().get(0));
-					((INotificationCapsule)o).setIcon(ImageIO.read(j.getInputStream(new ZipEntry("icon.png"))));
-					((INotificationCapsule)o).setConfigElement(root);
-					log.debug("Adding the initialized capsule to the pool");
-					notificationCapsules.add(((INotificationCapsule)o));
-					return ((INotificationCapsule)o);
+					((NotificationCapsule)o).init((Element)root.getChildren().get(0));
+					((NotificationCapsule)o).setIcon(ImageIO.read(j.getInputStream(new ZipEntry("icon.png"))));
+					((NotificationCapsule)o).setConfigElement(root);
+					notificationCapsules.add(((NotificationCapsule)o));
+					log.debug("Added the initialized capsule to the pool");
+					return ((NotificationCapsule)o);
 				}else{
 					log.error("Not a HC nor a NC, I don't know what to do with this");
 					throw new InvalidCapsuleException("Invalid capsule configuration, "+o.getClass().getName() +
-							" is not of IHardwareCapsule or INotificationCapsule type.");
+							" is not of HardwareCapsule or NotificationCapsule type.");
 				}
 			}			
 		}catch(Exception e){
@@ -82,15 +82,15 @@ public class CapsuleLoader {
 		return null;
 	}
 	
-	public ArrayList<IHardwareCapsule> getHardwareCapsules(){
+	public ArrayList<HardwareCapsule> getHardwareCapsules(){
 		return hardwareCapsules;
 	}
 	
-	public ArrayList<INotificationCapsule> getNotificationCapsules(){
+	public ArrayList<NotificationCapsule> getNotificationCapsules(){
 		return notificationCapsules;
 	}
 	
-	public INotificationCapsule getNotificationCapsuleAtIndex(int id){
+	public NotificationCapsule getNotificationCapsuleAtIndex(int id){
 		return notificationCapsules.get(id);
 	}
 	
@@ -122,7 +122,7 @@ public class CapsuleLoader {
 	 * 
 	 * @param	id	The id of the capsule to obtain
 	 * @return		The hardware capsule with that id*/
-	public IHardwareCapsule getHardwareCapsuleAtIndex(int id){
+	public HardwareCapsule getHardwareCapsuleAtIndex(int id){
 		return hardwareCapsules.get(id);
 	}
 	
@@ -131,8 +131,9 @@ public class CapsuleLoader {
 		return hardwareCapsules.size();
 	}
 	
-	private void addActions(int id, IHardwareCapsule c){
-		for(int i=0; i<c.getActions().size(); i++){
+	private void addActions(int id, HardwareCapsule c){
+		ArrayList<IAction> actSize = c.getActions();
+		for(int i=0; i<actSize.size(); i++){
 			IAction a = c.getActions().get(i);
 			if(!(actionToId.containsKey(a.getName())))
 				/*The actionToId hash uses the action name as key. The value
@@ -146,7 +147,7 @@ public class CapsuleLoader {
 	}
 	
 	private Object doInstance(Element e) throws InvalidCapsuleException, 
-		ClassNotFoundException{
+	ClassNotFoundException{
 		//Get class attribute from XML
 		Attribute classAtt = e.getAttribute("class");
 		if(classAtt == null){

@@ -14,10 +14,10 @@ import org.jdom.input.SAXBuilder;
 
 import ubisoa.activecloud.capsules.CapsuleLoader;
 import ubisoa.activecloud.capsules.ClassPathHacker;
+import ubisoa.activecloud.capsules.HardwareCapsule;
 import ubisoa.activecloud.capsules.IAction;
 import ubisoa.activecloud.capsules.ICapsule;
-import ubisoa.activecloud.capsules.IHardwareCapsule;
-import ubisoa.activecloud.capsules.INotificationCapsule;
+import ubisoa.activecloud.capsules.NotificationCapsule;
 import ubisoa.activecloud.exceptions.ActionInvokeException;
 import ubisoa.activecloud.exceptions.CapsuleInitException;
 import ubisoa.activecloud.exceptions.InvalidCapsuleException;
@@ -46,22 +46,36 @@ public final class NodeAccessService{
 		return loader.getNotifcationCapsulesCount();
 	}
 	
-	public ArrayList<IHardwareCapsule> getHardwareCapsules(){
+	public HardwareCapsule getHardwareCapsule(int id){
+		if(loader.getHardwareCapsulesCount() > id){
+			return loader.getHardwareCapsuleAtIndex(id);
+		}
+		return null;
+	}
+	
+	public NotificationCapsule getNotificationCapsule(int id){
+		if(loader.getNotifcationCapsulesCount() > id){
+			return loader.getNotificationCapsuleAtIndex(id);
+		}
+		return null;
+	}
+	
+	public ArrayList<HardwareCapsule> getHardwareCapsules(){
 		return loader.getHardwareCapsules();
 	}
 	
 	public int getHardwareCapsuleId(String capsule){
 		/*iterate the loaded hardware capsules*/
 		int i = 0;
-		for(IHardwareCapsule cap : loader.getHardwareCapsules()){
-			if(cap.getClass().getCanonicalName().equals(capsule))
+		for(HardwareCapsule cap : loader.getHardwareCapsules()){
+			if(cap.getClass().getName().equals(capsule))
 				return i;
 			i++;
 		}
 		return -1;
 	}
 	
-	public ArrayList<INotificationCapsule> getNotificationCapsules(){
+	public ArrayList<NotificationCapsule> getNotificationCapsules(){
 		return loader.getNotificationCapsules();
 	}
 	
@@ -74,13 +88,13 @@ public final class NodeAccessService{
 		}
 		
 		/*iterate the loaded hardware capsules*/
-		for(IHardwareCapsule cap : loader.getHardwareCapsules()){
+		for(HardwareCapsule cap : loader.getHardwareCapsules()){
 			if(cap.getClass().getCanonicalName().equals(capsule))
 				return true;
 		}
 		
 		/*iterate the loaded notification capsules*/
-		for(INotificationCapsule cap : loader.getNotificationCapsules()){
+		for(NotificationCapsule cap : loader.getNotificationCapsules()){
 			if(cap.getClass().getCanonicalName().equals(capsule))
 				return true;
 		}
@@ -89,7 +103,7 @@ public final class NodeAccessService{
 		return false;
 	}
 	
-	public ICapsule loadCapsule(JarFile capsule) 
+	public synchronized ICapsule loadCapsule(JarFile capsule) 
 		throws CapsuleInitException, InvalidCapsuleException{
 		log.debug("Loading capsule "+capsule.getName());
 		SAXBuilder builder = new SAXBuilder();
@@ -123,28 +137,46 @@ public final class NodeAccessService{
 		return null;
 	}
 	
-	public void invokeAction(String action, Element params) throws ActionInvokeException{
+	/**Searches for the specified action and if found, executes it's run method*/
+	public synchronized void invokeAction(String action, Element params) throws ActionInvokeException{
 		//Get the ID corresponding to the action
 		int[] ids = loader.actionToId(action);
-		int id = ids[0];
-		int actId = ids[1];
+		final int id = ids[0];
+		final int actId = ids[1];
+		final Element parameters = params;
 		
 		/*If the action is found inside a loaded capsule, invoke it.
 		 * When an action is not found, actionToId returns -1 in both
 		 * the CapsuleID and ActionID*/
 		if((id >= 0) && (actId >= 0)){
-			IHardwareCapsule c = loader.getHardwareCapsuleAtIndex(id);
-			c.getActions().get(actId).invoke(params);
+			final HardwareCapsule c = loader.getHardwareCapsuleAtIndex(id);
+			
+			new Thread(){
+				public void run(){
+					c.getActions().get(actId).run(parameters);
+				}
+			}.run();
+			
 		} else {
 			log.debug("Action "+action+" was not found.");
 		}
 	}
 	
+	/**Executes the capsule action. The argument is a XML Element node containing the
+	 * action name to be executed and any parameter expected by the action.
+	 * @param	parameters	XML Element node containing the action name as an attribute called
+	 * 'name' in the top node, and any parameters expected by the action*/
+	public synchronized void invokeAction(Element parameters) throws ActionInvokeException{
+		//Get the parameters
+		String actionName = parameters.getAttributeValue("name");
+		invokeAction(actionName,parameters);
+	}
+	
 	public ArrayList<String> getActionList(){
-		ArrayList<IHardwareCapsule> hc = loader.getHardwareCapsules();
+		ArrayList<HardwareCapsule> hc = loader.getHardwareCapsules();
 		ArrayList<String> tempStrings = new ArrayList<String>();
 
-		for(IHardwareCapsule h : hc){
+		for(HardwareCapsule h : hc){
 			for(IAction action : h.getActions()){
 				tempStrings.add(action.getName());
 			}

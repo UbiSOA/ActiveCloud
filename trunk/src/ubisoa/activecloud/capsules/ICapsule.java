@@ -1,6 +1,6 @@
 package ubisoa.activecloud.capsules;
 
-import java.awt.Image;
+import java.awt.image.BufferedImage;
 
 import javax.swing.JPanel;
 
@@ -14,8 +14,8 @@ public interface ICapsule {
 	/*Common*/
 	public JPanel getConfigUI();
 	public void setConfigUI(JPanel configUI);
-	public Image getIcon();
-	public void setIcon(Image icon);
+	public BufferedImage getIcon();
+	public void setIcon(BufferedImage icon);
 	public Element getConfigElement();
 	public void setConfigElement(Element configElement);
 	public void stop() throws StopException;

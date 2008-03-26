@@ -5,16 +5,16 @@ import java.util.jar.JarFile;
 
 import org.jdom.Element;
 
-import ubisoa.activecloud.capsules.IHardwareCapsule;
+import ubisoa.activecloud.capsules.HardwareCapsule;
 
 public class HardwareCapsuleInitEvent extends EventObject {
 	private static final long serialVersionUID = -428099616975439785L;
 	private int id;
 	private Element config;
-	private IHardwareCapsule hSource;
+	private HardwareCapsule hSource;
 	private JarFile jarFile;
 	
-	public HardwareCapsuleInitEvent(IHardwareCapsule source, int id, Element config,
+	public HardwareCapsuleInitEvent(HardwareCapsule source, int id, Element config,
 			JarFile jarFile){
 		super(source);
 		this.hSource = source;
@@ -24,7 +24,7 @@ public class HardwareCapsuleInitEvent extends EventObject {
 	}
 	
 	@Override
-	public IHardwareCapsule getSource(){
+	public HardwareCapsule getSource(){
 		return hSource;
 	}
 	

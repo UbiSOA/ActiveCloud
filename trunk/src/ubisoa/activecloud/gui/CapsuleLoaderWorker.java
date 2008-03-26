@@ -9,8 +9,6 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.jar.JarFile;
 
-import javax.swing.ImageIcon;
-import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
@@ -44,8 +42,11 @@ public class CapsuleLoaderWorker extends SwingWorker<List<ICapsule>, String>{
 		try{
 			for(final ICapsule capsule : get()){
 				if(!(capsule == null)){
-					JLabel capsuleLabel = new JLabel(new ImageIcon(capsule.getIcon()));
+					final ImageLabel capsuleLabel = new ImageLabel(capsule.getIcon());
+					capsuleLabel.setAlignmentX(0.5f);
+					capsuleLabel.setAlignmentY(0.5f);
 					capsuleLabel.addMouseListener(new MouseListener(){
+						
 						@Override
 						public void mouseClicked(MouseEvent arg0) {
 							configUI.add(capsule.getConfigUI(), BorderLayout.CENTER);
@@ -54,10 +55,14 @@ public class CapsuleLoaderWorker extends SwingWorker<List<ICapsule>, String>{
 						}
 
 						@Override
-						public void mouseEntered(MouseEvent arg0) {}
+						public void mouseEntered(MouseEvent arg0) {
+
+						}
 
 						@Override
-						public void mouseExited(MouseEvent arg0) {}
+						public void mouseExited(MouseEvent arg0) {
+
+						}
 
 						@Override
 						public void mousePressed(MouseEvent arg0) {}
@@ -66,6 +71,7 @@ public class CapsuleLoaderWorker extends SwingWorker<List<ICapsule>, String>{
 						public void mouseReleased(MouseEvent arg0) {}
 						
 					});
+
 					viewer.add(capsuleLabel);
 					viewer.revalidate();
 					progressBar.setValue(0);	
