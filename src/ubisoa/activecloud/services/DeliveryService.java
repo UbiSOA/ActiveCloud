@@ -24,6 +24,8 @@ public class DeliveryService{
 	
 	public void publish(Element payload){
 		String capsuleName = payload.getAttributeValue("class");
+		if(capsuleName == null)
+			return;
 		try{
 			int id = NodeAccessService.get().getHardwareCapsuleId(capsuleName);
 			log.debug("Selecting observer index "+id);
