@@ -53,7 +53,7 @@ public class CapsuleLoader {
 				if(theHardwareClass.isInstance(o)){
 					log.debug("Dealing with a hardware capsule...");
 					log.debug("Making the call to the capsule's init method");
-					((HardwareCapsule)o).init((Element)root.getChildren().get(0));
+					((HardwareCapsule)o).init(root);
 					((HardwareCapsule)o).setIcon(ImageIO.read(j.getInputStream(new ZipEntry("icon.png"))));
 					((HardwareCapsule)o).setConfigElement(root);
 					log.debug("Adding the initialized capsule to the pool");
@@ -64,7 +64,7 @@ public class CapsuleLoader {
 				}else if(theNotificationClass.isInstance(o)){
 					log.debug("Dealing with a notification capsule...");
 					log.debug("Making the call to the capsule's init method");
-					((NotificationCapsule)o).init((Element)root.getChildren().get(0));
+					((NotificationCapsule)o).init(root);
 					((NotificationCapsule)o).setIcon(ImageIO.read(j.getInputStream(new ZipEntry("icon.png"))));
 					((NotificationCapsule)o).setConfigElement(root);
 					notificationCapsules.add(((NotificationCapsule)o));
