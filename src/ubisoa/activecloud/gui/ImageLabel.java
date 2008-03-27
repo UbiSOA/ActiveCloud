@@ -57,6 +57,10 @@ public class ImageLabel extends JLabel implements MouseListener{
 	public void mouseReleased(MouseEvent arg0) {
 		Point location = getLocationOnScreen();
 		
+		//For Java5 Compatibility
+		//int clickX = getX();
+		//int clickY = getY();
+		
 		int clickX = arg0.getXOnScreen();
 		int clickY = arg0.getYOnScreen();
 		
