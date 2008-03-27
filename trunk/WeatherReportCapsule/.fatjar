@@ -1,0 +1,14 @@
+#Fat Jar Configuration File
+#Mon Mar 24 09:34:35 PST 2008
+onejar.license.required=true
+manifest.classpath=
+manifest.removesigners=true
+onejar.checkbox=false
+jarname=WeatherReportCapsule_fat.jar
+manifest.mergeall=true
+manifest.mainclass=
+manifest.file=<createnew>
+jarname.isextern=false
+onejar.expand=
+excludes=<po|ActiveCloud>;<cl|/home/cesar/workspace/eclipseProjects/ActiveCloud/lib>;<jar|jdom.jar>;<jar|log4j-1.2.15.jar>;<jar|swing-worker-1.1.jar>;<jar|bsh-2.0b4.jar>;<jar|jogl.jar>;<jar|jogl-demos.jar>
+includes=

@@ -1,0 +1,8 @@
+# Enerjy Software baseline data (files=1, problems=6).
+path: /WeatherReportCapsule/src/com/divinesoft/activecloud/capsules/WeatherReportCapsule.java
+problem: JAVA0118:JAVA0118 Missing javadoc: type 'WeatherReportCapsule'
+problem: JAVA0137:JAVA0137 Non-abstract class 'WeatherReportCapsule' missing constructor
+problem: JAVA0126:JAVA0126 Method 'receive' declares unchecked exception 'ReceiveException' in throws
+problem: JAVA0126:JAVA0126 Method 'receive' declares unchecked exception 'ReceiveException' in throws
+problem: JAVA0126:JAVA0126 Method 'start' declares unchecked exception 'StartException' in throws
+problem: JAVA0126:JAVA0126 Method 'stop' declares unchecked exception 'StopException' in throws

@@ -1,0 +1,4 @@
+<?xml version="1.0"?>
+<capsule>
+	<nc class="com.divinesoft.activecloud.capsules.WeatherReportCapsule" />
+</capsule>
