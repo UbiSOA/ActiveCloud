@@ -1,0 +1,13 @@
+# Enerjy Software baseline data (files=1, problems=11).
+path: /RSSCapsule/src/com/divinesoft/activecloud/capsules/RSSCapsule.java
+problem: JAVA0005:JAVA0005 Imports not in specified order
+problem: JAVA0118:JAVA0118 Missing javadoc: type 'RSSCapsule'
+problem: JAVA0137:JAVA0137 Non-abstract class 'RSSCapsule' missing constructor
+problem: JAVA0126:JAVA0126 Method 'receive' declares unchecked exception 'ReceiveException' in throws
+problem: JAVA0126:JAVA0126 Method 'receive' declares unchecked exception 'ReceiveException' in throws
+problem: JAVA0171:JAVA0171 Unused local variable 'entries'
+problem: JAVA0166:JAVA0166 Generic exception 'java.lang.Exception' caught
+problem: JAVA0034:JAVA0034 Missing braces in if statement
+problem: JAVA0126:JAVA0126 Method 'start' declares unchecked exception 'StartException' in throws
+problem: JAVA0126:JAVA0126 Method 'stop' declares unchecked exception 'StopException' in throws
+problem: JAVA0173:JAVA0173 Unused method parameter 'feedFile'
