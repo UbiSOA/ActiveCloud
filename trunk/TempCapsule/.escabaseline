@@ -1,0 +1,11 @@
+# Enerjy Software baseline data (files=1, problems=9).
+path: /TempCapsule/src/com/divinesoft/activecloud/capsules/TempCapsule.java
+problem: JAVA0118:JAVA0118 Missing javadoc: type 'TempCapsule'
+problem: JAVA0137:JAVA0137 Non-abstract class 'TempCapsule' missing constructor
+problem: JAVA0077:JAVA0077 Private field 'defaultTimestampFormat' not used in declaring class
+problem: JAVA0254:JAVA0254 Use enhanced for loop construct instead of Iterator
+problem: JAVA0166:JAVA0166 Generic exception 'java.lang.Exception' caught
+problem: JAVA0076:JAVA0076 Use of magic number '100'
+problem: JAVA0177:JAVA0177 Variable declaration 'inputLine' missing initializer
+problem: JAVA0126:JAVA0126 Method 'start' declares unchecked exception 'StartException' in throws
+problem: JAVA0126:JAVA0126 Method 'stop' declares unchecked exception 'StopException' in throws

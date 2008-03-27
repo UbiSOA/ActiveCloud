@@ -1,0 +1,5 @@
+<?xml version="1.0"?>
+<capsule>
+	<hal class="com.divinesoft.activecloud.capsules.TempCapsule" 
+		timestampformat="yyyy.MM.dd 'at' HH:mm:ss z"/>
+</capsule>
