@@ -83,8 +83,15 @@ public class FileSystemService{
 			InputStream is = capsule.getInputStream(new ZipEntry("config.xml"));
 			if(is != null){
 				//check to see if there's a icon.png file that can be loaded
-				BufferedImage bf = ImageIO.read(capsule.getInputStream(
-						new ZipEntry("icon.png")));
+				BufferedImage bf = null;
+				
+				try{
+					bf = ImageIO.read(capsule.getInputStream(
+							new ZipEntry("icon.png")));
+				}catch(IllegalArgumentException iae){
+					log.error(iae.getMessage());
+				}
+				
 				if(bf != null){
 					return true;
 				} else {
@@ -92,6 +99,7 @@ public class FileSystemService{
 					log.debug("Couldn't read icon.png from JAR");
 					return false;
 				}
+				
 			} else {
 				//Couldn't read config.xml
 				log.debug("Couldn't read config.xml from JAR");
