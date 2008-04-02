@@ -1,0 +1,12 @@
+package com.ubisoa.activecloud.capsules;
+
+import org.jdom.Element;
+
+import com.ubisoa.activecloud.exceptions.ActionInvokeException;
+
+
+public interface IAction {
+	public String getName();
+	public String getDescription();
+	public void run(Element params) throws ActionInvokeException;
+}
