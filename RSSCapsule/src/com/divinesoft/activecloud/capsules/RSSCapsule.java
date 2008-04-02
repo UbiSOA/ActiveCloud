@@ -2,23 +2,29 @@ package com.divinesoft.activecloud.capsules;
 
 import java.io.File;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
 
 import org.apache.log4j.Logger;
 import org.jdom.Element;
-
-import com.sun.syndication.feed.synd.SyndEntry;
-import com.sun.syndication.feed.synd.SyndFeed;
-import com.sun.syndication.feed.synd.SyndFeedImpl;
-import com.sun.syndication.io.FeedException;
-import com.sun.syndication.io.SyndFeedInput;
-import com.sun.syndication.io.XmlReader;
 
 import ubisoa.activecloud.capsules.NotificationCapsule;
 import ubisoa.activecloud.exceptions.CapsuleInitException;
 import ubisoa.activecloud.exceptions.ReceiveException;
 import ubisoa.activecloud.exceptions.StartException;
 import ubisoa.activecloud.exceptions.StopException;
+
+import com.sun.syndication.feed.synd.SyndContent;
+import com.sun.syndication.feed.synd.SyndContentImpl;
+import com.sun.syndication.feed.synd.SyndEntry;
+import com.sun.syndication.feed.synd.SyndEntryImpl;
+import com.sun.syndication.feed.synd.SyndFeed;
+import com.sun.syndication.feed.synd.SyndFeedImpl;
+import com.sun.syndication.io.FeedException;
+import com.sun.syndication.io.SyndFeedInput;
+import com.sun.syndication.io.XmlReader;
 
 /**
  * A Capsule to report data in RSS Format
@@ -34,6 +40,10 @@ public class RSSCapsule extends NotificationCapsule{
 	private String feedTitle;
 	private int maxEntries;
 	private static final int defaultMaxEntries = 15;
+	private String timestampFormat;
+	private static final String defaultTimestampFormat = "yyyy-MM-dd 'at' HH:mm:ss";
+	private String author;
+	private static final String defaultAuthor = "RSSCapsule";
 	
 	@Override
 	public void receive(final byte[] payload) throws ReceiveException {
@@ -58,21 +68,62 @@ public class RSSCapsule extends NotificationCapsule{
 				entries.remove(maxEntries - i);
 			}
 		}
-		//Add the new elements
 		
+		//Add the new elements
+		entries.add(nodeToEntry(payload));
+		feed.setEntries(entries);
 	}
 	
 	private SyndEntry nodeToEntry(Element node){
-		SyndEntry newEntry = new SyndEntry();
+		//Get each <entry>
+		List<Element> entries = node.getChildren();
+		Iterator<Element> iterator = entries.iterator();
+		//The name of the new entry
+		String entryName;
+		Date publishedDate = new Date();
+		
+		//Try to format the timestamp according to what the user provided
+		try{
+			SimpleDateFormat timestamp = new SimpleDateFormat(timestampFormat);
+			entryName = "Producer: "+node.getAttributeValue("class").substring(
+					node.getAttributeValue("class").lastIndexOf('.')+1)+ " at "+
+					timestamp.format(publishedDate);
+		}catch(Exception ex){
+			SimpleDateFormat timestamp = new SimpleDateFormat(
+					RSSCapsule.defaultTimestampFormat);
+			entryName = "Producer: "+node.getAttributeValue("class").substring(
+					node.getAttributeValue("class").lastIndexOf('.')+1)+ " at "+
+					timestamp.format(publishedDate);
+		}
+		
+		SyndEntry newEntry = new SyndEntryImpl();
+		newEntry.setTitle(entryName);
+		newEntry.setPublishedDate(publishedDate);
+		newEntry.setAuthor(author);
+		
+		SyndContent content = new SyndContentImpl();
+		
+		while(iterator.hasNext()){
+			Element e = iterator.next();
+			String c = "<p>Name: " +  e.getAttributeValue("name") +
+				" Value: " + e.getValue() + "</p></br />";
+			content.setValue(c);
+		}
+		
+		return newEntry;
 	}
 
-	@Override
-	public void init(final Element e) throws CapsuleInitException {
+	public void init(Element e) throws CapsuleInitException {
 		final Element config = e.getChild("nc");
 		feedType = config.getAttributeValue("feedtype");
 		filename = config.getAttributeValue("filename");
 		encoding = config.getAttributeValue("encoding");
 		feedTitle = config.getAttributeValue("feedtitle");
+		author = config.getAttributeValue("author");
+		
+		if(author == null){
+			author = RSSCapsule.defaultAuthor;
+		}
 		
 		try{
 			maxEntries = Integer.parseInt(config.getAttributeValue("maxentries"));
@@ -98,13 +149,11 @@ public class RSSCapsule extends NotificationCapsule{
 		}
 	}
 
-	@Override
 	public void start() throws StartException {
 		// TODO Auto-generated method stub
 		
 	}
 
-	@Override
 	public void stop() throws StopException {
 		// TODO Auto-generated method stub
 		
