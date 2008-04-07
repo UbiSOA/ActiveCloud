@@ -1,0 +1,4 @@
+// File getActionList.bsh
+getActionList(){
+	return nodes.getActionList();
+}

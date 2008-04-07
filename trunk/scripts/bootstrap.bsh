@@ -1,0 +1,23 @@
+// File bootstrap.bsh
+print("Bootstraping ActiveCloud");
+import com.ubisoa.activecloud.capsules.*;
+import com.ubisoa.activecloud.services.*;
+import com.ubisoa.activecloud.exceptions.*;
+import com.ubisoa.activecloud.events.*;
+import org.jdom.*;
+nodes = NodeAccessService.get();
+delivery = DeliveryService.get();
+net = NetworkStateService.get();
+print("Defined Services:");
+print("Service Name\t\tVariable");
+print("-----------------------------------");
+print("Node Access Service\tnodes");
+print("Delivery Service\t\tdelivery");
+print("Network State Service\tnet");
+// End bootstrap
+
+// Custom setup
+
+// Add Frontend
+import com.ubisoa.activecloud.services.frontends.WebServiceFrontend;
+new WebServiceFrontend().start();

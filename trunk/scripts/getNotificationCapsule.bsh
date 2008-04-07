@@ -1,0 +1,4 @@
+// File getNotificationCapsule.bsh
+getNotificationCapsule(name){
+	return nodes.getNotificationCapsule(name);
+}

@@ -1,0 +1,8 @@
+// File getHardwareCapsule.bsh
+getHardwareCapsule(name){
+	id = nodes.getHardwareCapsuleId(name);
+	if(id > -1){
+		return nodes.getHardwareCapsule(id);
+	}
+	return null;
+}

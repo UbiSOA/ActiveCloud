@@ -2,6 +2,7 @@ package com.ubisoa.activecloud.capsules;
 
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 import javax.swing.JPanel;
 
@@ -15,11 +16,15 @@ import com.ubisoa.activecloud.exceptions.StopException;
 public abstract class HardwareCapsule implements ICapsule{
 	private JPanel configUI;
 	private BufferedImage icon = null;
-	private Element configElement;
+	private Element configElement = new Element("config");
 	private ArrayList<IAction> actions;
 	
 	public HardwareCapsule(){
 		actions = new ArrayList<IAction>();
+	}
+	
+	public void init(Element e) throws CapsuleInitException{
+		setConfigElement(e.getChild("config"));
 	}
 	
 	public JPanel getConfigUI(){
@@ -43,7 +48,9 @@ public abstract class HardwareCapsule implements ICapsule{
 	}
 	
 	public void setConfigElement(Element configElement){
-		this.configElement = configElement;
+		if(configElement != null){
+			this.configElement = configElement;	
+		}
 	}
 	
 	/*Hardware specific*/
@@ -58,6 +65,5 @@ public abstract class HardwareCapsule implements ICapsule{
 	/*From ICapsule*/
 	public abstract void stop() throws StopException;
 	public abstract void start() throws StartException;
-	public abstract void init(Element e) throws CapsuleInitException;
 	
 }
