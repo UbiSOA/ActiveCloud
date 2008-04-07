@@ -1,4 +1,9 @@
 <?xml version="1.0"?>
 <capsule>
 	<nc class="com.divinesoft.activecloud.capsules.WeatherReportCapsule" />
+	
+	<!-- Unique for each object -->
+	<config>
+		<key name="prefix">WRC</key>
+	</config>
 </capsule>

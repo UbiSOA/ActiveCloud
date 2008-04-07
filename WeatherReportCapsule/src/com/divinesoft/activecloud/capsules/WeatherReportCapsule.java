@@ -1,6 +1,7 @@
 package com.divinesoft.activecloud.capsules;
 
 import java.awt.FlowLayout;
+import java.util.List;
 
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -10,15 +11,17 @@ import org.jdom.Element;
 import org.jdom.output.Format;
 import org.jdom.output.XMLOutputter;
 
-import ubisoa.activecloud.capsules.NotificationCapsule;
-import ubisoa.activecloud.exceptions.CapsuleInitException;
-import ubisoa.activecloud.exceptions.ReceiveException;
-import ubisoa.activecloud.exceptions.StartException;
-import ubisoa.activecloud.exceptions.StopException;
+import com.ubisoa.activecloud.capsules.NotificationCapsule;
+import com.ubisoa.activecloud.exceptions.CapsuleInitException;
+import com.ubisoa.activecloud.exceptions.ReceiveException;
+import com.ubisoa.activecloud.exceptions.StartException;
+import com.ubisoa.activecloud.exceptions.StopException;
+
 
 public class WeatherReportCapsule extends NotificationCapsule{
 	private static Logger log = Logger.getLogger(WeatherReportCapsule.class);
 	private JPanel configUI;
+	private String prefix;
 	
 	public void receive(byte[] payload) throws ReceiveException {
 		log.debug("receive called, but not implemented");
@@ -26,7 +29,12 @@ public class WeatherReportCapsule extends NotificationCapsule{
 
 	public void receive(Element payload) throws ReceiveException {
 		XMLOutputter out = new XMLOutputter(Format.getPrettyFormat());
-		log.debug(out.outputString(payload));
+		if(prefix != null){
+			log.debug(prefix);
+			log.debug(out.outputString(payload));
+		}else{
+			log.debug(out.outputString(payload));
+		}
 	}
 
 	@Override
@@ -38,6 +46,23 @@ public class WeatherReportCapsule extends NotificationCapsule{
 
 	public void init(Element e) throws CapsuleInitException {
 
+	}
+	
+	@SuppressWarnings("unchecked")
+	@Override
+	public void setConfigElement(Element e){
+		super.setConfigElement(e);
+		String pre = null;
+		
+		for(Element key : (List<Element>)e.getChildren()){
+			if(key.getAttributeValue("name").equals("prefix")){
+				pre = key.getValue();
+			}
+		}
+		
+		if(pre != null){
+			this.prefix = pre;
+		}
 	}
 
 	public void start() throws StartException {
