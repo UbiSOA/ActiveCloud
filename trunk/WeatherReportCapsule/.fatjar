@@ -1,5 +1,5 @@
 #Fat Jar Configuration File
-#Mon Mar 24 09:34:35 PST 2008
+#Sat Apr 05 20:31:35 PST 2008
 onejar.license.required=true
 manifest.classpath=
 manifest.removesigners=true
@@ -10,5 +10,5 @@ manifest.mainclass=
 manifest.file=<createnew>
 jarname.isextern=false
 onejar.expand=
-excludes=<po|ActiveCloud>;<cl|/home/cesar/workspace/eclipseProjects/ActiveCloud/lib>;<jar|jdom.jar>;<jar|log4j-1.2.15.jar>;<jar|swing-worker-1.1.jar>;<jar|bsh-2.0b4.jar>;<jar|jogl.jar>;<jar|jogl-demos.jar>
+excludes=<po|ActiveCloud>;<cl|/home/cesar/workspace/eclipseProjects/ActiveCloud/lib>;<jar|jdom.jar>;<jar|log4j-1.2.15.jar>;<jar|swing-worker-1.1.jar>;<jar|bsh-2.0b4.jar>;<jar|jogl.jar>;<jar|jogl-demos.jar>;<jar|Filters.jar>;<jar|swingx-2008_03_09.jar>;<jar|TimingFramework-1.0.jar>
 includes=
