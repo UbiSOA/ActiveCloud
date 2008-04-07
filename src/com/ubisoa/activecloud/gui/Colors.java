@@ -1,6 +1,6 @@
 package com.ubisoa.activecloud.gui;
 
-import java.awt.*;
+import java.awt.Color;
 
 /**
  * Colors is an enumeration class that makes it easier to work with colors. Methods are provided for

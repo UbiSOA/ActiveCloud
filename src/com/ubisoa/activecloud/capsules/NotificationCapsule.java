@@ -6,6 +6,7 @@ import javax.swing.JPanel;
 
 import org.jdom.Element;
 
+import com.ubisoa.activecloud.exceptions.CapsuleInitException;
 import com.ubisoa.activecloud.exceptions.ReceiveException;
 
 
@@ -13,6 +14,10 @@ public abstract class NotificationCapsule implements ICapsule{
 	private JPanel configUI;
 	private BufferedImage icon;
 	private Element configElement = new Element("config");
+	
+	public void init(Element e) throws CapsuleInitException{
+		setConfigElement(e.getChild("config"));
+	}
 	
 	public JPanel getConfigUI(){
 		return configUI;
@@ -35,7 +40,9 @@ public abstract class NotificationCapsule implements ICapsule{
 	}
 	
 	public void setConfigElement(Element config){
-		this.configElement = config;
+		if(configElement != null){
+			this.configElement = config;	
+		}
 	}
 	
 	/*Notification specific*/

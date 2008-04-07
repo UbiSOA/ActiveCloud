@@ -115,7 +115,7 @@ public class CapsuleInstallerPanel extends JXPanel{
 				f.add(b,BorderLayout.SOUTH);
 				
 				
-				LineSquarePanel box = new LineSquarePanel();
+				LineSquarePanel box = new LineSquarePanel(true);
 				final CapsuleInstallerPanel cip = new CapsuleInstallerPanel(box);
 				f.setGlassPane(cip);
 				f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);

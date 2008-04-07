@@ -8,10 +8,13 @@ package com.ubisoa.activecloud.gui;
 
 import javax.swing.SwingUtilities;
 
+import org.apache.log4j.Logger;
 import org.jdesktop.swingx.JXPanel;
 
 import bsh.Interpreter;
 import bsh.util.JConsole;
+
+import com.ubisoa.activecloud.services.QueryProcessorService;
 
 /**
  *
@@ -19,10 +22,13 @@ import bsh.util.JConsole;
  */
 public class BottomTabbedPanel extends JXPanel {
     private Interpreter interpreter;
-
+    private static Logger log = Logger.getLogger(BottomTabbedPanel.class);
+    
     public BottomTabbedPanel() {
         initComponents();
         interpreter = new Interpreter(scriptingEditor);
+		interpreter = QueryProcessorService.get().bootstrapInterpreter(interpreter);
+
         SwingUtilities.invokeLater(new Runnable(){
         	public void run(){
         		new Thread(interpreter).start();	

@@ -60,6 +60,17 @@ public final class NodeAccessService{
 		return null;
 	}
 	
+	public NotificationCapsule getNotificationCapsule(String name){
+		int i = 0;
+		for(NotificationCapsule cap : loader.getNotificationCapsules()){
+			if(cap.getClass().getName().equals(name)){
+				return loader.getNotificationCapsuleAtIndex(i);
+			}
+			i++;
+		}
+		return null;
+	}
+	
 	public ArrayList<HardwareCapsule> getHardwareCapsules(){
 		return loader.getHardwareCapsules();
 	}
@@ -68,8 +79,9 @@ public final class NodeAccessService{
 		/*iterate the loaded hardware capsules*/
 		int i = 0;
 		for(HardwareCapsule cap : loader.getHardwareCapsules()){
-			if(cap.getClass().getName().equals(capsule))
+			if(cap.getClass().getName().equals(capsule)){
 				return i;
+			}
 			i++;
 		}
 		return -1;
@@ -77,6 +89,17 @@ public final class NodeAccessService{
 	
 	public ArrayList<NotificationCapsule> getNotificationCapsules(){
 		return loader.getNotificationCapsules();
+	}
+	
+	public String[] getActionList(){
+		ArrayList<String> actionList = new ArrayList<String>();
+		for(HardwareCapsule hc : loader.getHardwareCapsules()){
+			for(IAction action : hc.getActions()){
+				actionList.add(action.getName());
+			}
+		}
+		String[] result = new String[actionList.size()];
+		return actionList.toArray(result);
 	}
 	
 	public boolean isCapsuleLoaded(String capsule){
@@ -138,12 +161,11 @@ public final class NodeAccessService{
 	}
 	
 	/**Searches for the specified action and if found, executes it's run method*/
-	public synchronized void invokeAction(String action, Element params) throws ActionInvokeException{
+	public synchronized void invokeAction(String action) throws ActionInvokeException{
 		//Get the ID corresponding to the action
 		int[] ids = loader.actionToId(action);
 		final int id = ids[0];
 		final int actId = ids[1];
-		final Element parameters = params;
 		
 		/*If the action is found inside a loaded capsule, invoke it.
 		 * When an action is not found, actionToId returns -1 in both
@@ -153,37 +175,13 @@ public final class NodeAccessService{
 			
 			new Thread(){
 				public void run(){
-					c.getActions().get(actId).run(parameters);
+					c.getActions().get(actId).run();
 				}
 			}.run();
 			
 		} else {
 			log.debug("Action "+action+" was not found.");
 		}
-	}
-	
-	/**Executes the capsule action. The argument is a XML Element node containing the
-	 * action name to be executed and any parameter expected by the action.
-	 * @param	parameters	XML Element node containing the action name as an attribute called
-	 * 'name' in the top node, and any parameters expected by the action
-	 * @throws	ActionInvokeException If the action could not be invoked*/
-	public synchronized void invokeAction(Element parameters) throws ActionInvokeException{
-		//Get the parameters
-		String actionName = parameters.getAttributeValue("name");
-		invokeAction(actionName,parameters);
-	}
-	
-	public ArrayList<String> getActionList(){
-		ArrayList<HardwareCapsule> hc = loader.getHardwareCapsules();
-		ArrayList<String> tempStrings = new ArrayList<String>();
-
-		for(HardwareCapsule h : hc){
-			for(IAction action : h.getActions()){
-				tempStrings.add(action.getName());
-			}
-		}
-		
-		return tempStrings;
 	}
 
 	public static NodeAccessService get() throws CapsuleInitException{

@@ -14,7 +14,7 @@ public class NetworkStateService {
 		
 	}
 	
-	public NetworkStateService get(){
+	public static NetworkStateService get(){
 		if(singleton == null){
 			log.debug("Instantiating "+NetworkStateService.class.getName());
 			singleton = new NetworkStateService();

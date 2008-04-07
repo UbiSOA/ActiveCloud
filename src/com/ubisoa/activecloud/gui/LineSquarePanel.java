@@ -1,11 +1,9 @@
 package com.ubisoa.activecloud.gui;
 
-import java.awt.AlphaComposite;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
-import java.awt.GradientPaint;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Point;
@@ -27,9 +25,11 @@ public class LineSquarePanel extends JXPanel{
 	private static final int messageYOffset = 20;
 	private static final int messageXOffset = 10;
 	private static final Color backgroundColor = new Color(0,0,0,220);
+	boolean withArrow = false;
 	
-	public LineSquarePanel(){
+	public LineSquarePanel(boolean withArrow){
 		setOpaque(false);
+		this.withArrow = withArrow;
 	}
 	
 	@Override
@@ -39,11 +39,11 @@ public class LineSquarePanel extends JXPanel{
 		//Paint the background
 		g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 		g2d.setColor(backgroundColor);
-		g2d.fillRoundRect(34,34,getWidth()-68,getHeight()-68,30,30);
+		g2d.fillRoundRect(10,10,getWidth()-20,getHeight()-20,30,30);
         //Paint white border
 		g2d.setStroke(new BasicStroke(3f));
 		g2d.setColor(Color.WHITE);
-		g2d.drawRoundRect(34, 34, getWidth()-68, getHeight()-68, 30, 30);
+		g2d.drawRoundRect(10, 10, getWidth()-20, getHeight()-20, 30, 30);
         //Paint square centered
         Point center = new Point(getWidth()/2, getHeight()/2);
         //topleft corner of the square
@@ -58,6 +58,21 @@ public class LineSquarePanel extends JXPanel{
         		mitterLimit,dashs,dashOffset));
         //Draw square
         g2d.drawRoundRect(topleft.x, topleft.y, squareSize.width, squareSize.height, 10, 10);
+        
+        if(withArrow){
+            //Draw arrow
+            g2d.setStroke(new BasicStroke(1, BasicStroke.CAP_SQUARE, BasicStroke.JOIN_MITER));
+            //The square part
+            g2d.drawLine(topleft.x + 60, topleft.y + 20, topleft.x + squareSize.width - 120 + 60, topleft.y + 20);
+            g2d.drawLine(topleft.x + 60, topleft.y + 20, topleft.x + 60, topleft.y + squareSize.height - 80);
+            g2d.drawLine(topleft.x + squareSize.width - 120 + 60, topleft.y + 20, topleft.x + squareSize.width - 120 + 60, topleft.y + squareSize.height - 80);
+            //The triangle part
+            g2d.drawLine(topleft.x + 40, topleft.y + squareSize.height - 80, topleft.x + 60, topleft.y+squareSize.height - 80);
+            g2d.drawLine(topleft.x + squareSize.width - 120 + 80, topleft.y + squareSize.height - 80, topleft.x + squareSize.width - 120 + 60, topleft.y+squareSize.height - 80);
+            g2d.drawLine(topleft.x + 40, topleft.y + squareSize.height - 80, center.x, topleft.y + squareSize.height -40);
+            g2d.drawLine(topleft.x + squareSize.width - 120 + 80, topleft.y + squareSize.height - 80, center.x, topleft.y + squareSize.height -40);	
+        }
+        
         //Draw message
         g2d.setColor(g2d.getColor().darker());
         g2d.setFont(g.getFont().deriveFont(Font.PLAIN, 18f));
@@ -71,8 +86,8 @@ public class LineSquarePanel extends JXPanel{
 			public void run(){
 				JFrame f = new JFrame();
 				f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-				f.add(new LineSquarePanel());
-				f.setPreferredSize(new Dimension(800,600));
+				f.add(new LineSquarePanel(true));
+				f.setPreferredSize(new Dimension(400,300));
 				f.pack();
 				f.setVisible(true);
 			}
