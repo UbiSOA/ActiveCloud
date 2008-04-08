@@ -5,7 +5,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
-import java.util.TimerTask;
 import java.util.Vector;
 
 import org.apache.log4j.Logger;
@@ -13,84 +12,100 @@ import org.apache.log4j.Logger;
 import com.ubisoa.activecloud.events.FileSystemEvent;
 import com.ubisoa.activecloud.events.JARFilter;
 
-
-public class WatchDirectoryTask extends TimerTask{
+/**This task is platform-independent so it's safe to use it in any OS. It works
+ * by constantly polling the filesystem for added or deleted files, so it's not
+ * very resource friendly. It should be used as a last resort when a native 
+ * implementation is missing.*/
+public class WatchDirectoryTask implements FileSystemTask{
 	private Map<String, File> listOfFiles = new HashMap<String, File>();
 	private Map<String, File> newListOfFiles = new HashMap<String, File>();
 
     private static Logger log = Logger.getLogger(WatchDirectoryTask.class);
 	private File file;
+	private boolean monitorDirectory;
+	private String[] paths;
 	
-	public WatchDirectoryTask(String path){
-		super();
-		try{
-			initFileSystem(path);	
-		}catch(Exception e){
-			log.error(e.getMessage());
-		}
+	public WatchDirectoryTask(String path, boolean monitorDirectory){
+		this.monitorDirectory = monitorDirectory;
 	}
 	
-	/**Start watching the directory*/
+	/**Start watching the directory. This function compares the previous
+	 * directory content with the new one. If there are added or deleted
+	 * files it fires a new FileSystemEvent. This is experimental and should
+	 * not be enabled (monitorDirectory = false). Ideally it would be made
+	 * with JNI and some technology like inotify on GNU/Linux or similar for
+	 * other OSes.*/
 	@Override
 	public void run(){
-		/*At this point, a second has passed since we first
-		 * polled the folder for it's files, let's see if there
-		 * are any new files*/
-		Vector<String> toRemove = new Vector<String>();
-		Vector<String> toAdd = new Vector<String>();
 		
-		newListOfFiles = getFileMap(file.listFiles(new JARFilter()));
-		System.gc();
-		
-		/*If listOfFiles DOES NOT contains everything from newListOfFiles
-		 * there's a potential new File in there*/
-		Set<String> newKeys = newListOfFiles.keySet();
-		Iterator<String> iterator = newKeys.iterator();
-		while(iterator.hasNext()){
-			String theKey = iterator.next();
+		for(String p : paths){
+			try{
+				initFileSystem(p);
+			}catch(Exception e){
+				log.error(e.getMessage());
+			}
+		}
+
+		if(monitorDirectory){
+			/*At this point, some time has passed since we first
+			 * polled the folder for it's files, let's see if there
+			 * are any new files*/
+			Vector<String> toRemove = new Vector<String>();
+			Vector<String> toAdd = new Vector<String>();
 			
-			/*If listOfFiles doesn't contains this key, it's a new file*/
-			if(!listOfFiles.containsKey(theKey)){
-				File newFile = newListOfFiles.get(theKey);
-				listOfFiles.put(theKey, newFile);
+			newListOfFiles = getFileMap(file.listFiles(new JARFilter()));
+			System.gc();
+			
+			/*If listOfFiles DOES NOT contains everything from newListOfFiles
+			 * there's a potential new File in there*/
+			Set<String> newKeys = newListOfFiles.keySet();
+			Iterator<String> iterator = newKeys.iterator();
+			while(iterator.hasNext()){
+				String theKey = iterator.next();
 				
-				/*Fire NewJarAdded*/
-				if(!newFile.isDirectory()){
-					toAdd.add(theKey);
-					log.info("New JAR: "+newFile.getName());
+				/*If listOfFiles doesn't contains this key, it's a new file*/
+				if(!listOfFiles.containsKey(theKey)){
+					File newFile = newListOfFiles.get(theKey);
+					listOfFiles.put(theKey, newFile);
+					
+					/*Fire NewJarAdded*/
+					if(!newFile.isDirectory()){
+						toAdd.add(theKey);
+						log.info("New JAR: "+newFile.getName());
+					}
 				}
-			}
-		} //end while
-		
-		Set<String> oldKeys = listOfFiles.keySet();
-		iterator = oldKeys.iterator();
-		while(iterator.hasNext()){
-			String theKey = iterator.next();
+			} //end while
 			
-			if(!newListOfFiles.containsKey(theKey)){
-				File removedFile = listOfFiles.get(theKey);
-				if(!(removedFile.exists() && removedFile.isDirectory())){
-					/*Save the deleted files so when we are done iterating
-					 * we'll remove them from the map*/
-					toRemove.add(theKey);
-					log.info("Deleted JAR: "+removedFile.getName());	
+			Set<String> oldKeys = listOfFiles.keySet();
+			iterator = oldKeys.iterator();
+			while(iterator.hasNext()){
+				String theKey = iterator.next();
+				
+				if(!newListOfFiles.containsKey(theKey)){
+					File removedFile = listOfFiles.get(theKey);
+					if(!(removedFile.exists() && removedFile.isDirectory())){
+						/*Save the deleted files so when we are done iterating
+						 * we'll remove them from the map*/
+						toRemove.add(theKey);
+						log.info("Deleted JAR: "+removedFile.getName());	
+					}
 				}
+			} //end while
+			
+			/*Now remove those keys*/
+			iterator = toRemove.iterator();
+			while(iterator.hasNext()){
+				listOfFiles.remove(iterator.next());
 			}
-		} //end while
-		
-		/*Now remove those keys*/
-		iterator = toRemove.iterator();
-		while(iterator.hasNext()){
-			listOfFiles.remove(iterator.next());
+			
+			if(!(toAdd.isEmpty() && toRemove.isEmpty())){
+				FileSystemEvent evt = new FileSystemEvent(this,(String[])toAdd.toArray(new String[toAdd.size()]), 
+						(String[])toRemove.toArray(new String[toRemove.size()]));
+				FileSystemService.get().fireFileSystemEvent(evt);
+			}
+			
+			System.gc();	
 		}
-		
-		if(!(toAdd.isEmpty() && toRemove.isEmpty())){
-			FileSystemEvent evt = new FileSystemEvent(this,(String[])toAdd.toArray(new String[toAdd.size()]), 
-					(String[])toRemove.toArray(new String[toRemove.size()]));
-			FileSystemService.get().fireFileSystemEvent(evt);
-		}
-		
-		System.gc();
 	}
 	
 	private Map<String, File> getFileMap(File[] files){
@@ -119,5 +134,15 @@ public class WatchDirectoryTask extends TimerTask{
 		} else {
 			throw new Exception("Given path is not a directory");
 		}
+	}
+
+	@Override
+	public String[] getPaths() {
+		return paths;
+	}
+
+	@Override
+	public void setPaths(String[] path) {
+		this.paths = path;
 	}
 }

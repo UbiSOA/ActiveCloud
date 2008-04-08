@@ -4,6 +4,8 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Timer;
 import java.util.jar.JarFile;
 import java.util.zip.ZipEntry;
@@ -15,6 +17,7 @@ import org.apache.log4j.Logger;
 
 import com.ubisoa.activecloud.events.FileSystemEvent;
 import com.ubisoa.activecloud.events.FileSystemEventListener;
+import com.ubisoa.activecloud.events.JARFilter;
 
 
 /**
@@ -29,17 +32,57 @@ public class FileSystemService{
 	private boolean running;
     private EventListenerList listeners = new EventListenerList();
 	private Timer t;
+	private FileSystemTask task;
+	
+	public void addFileSystemTask(FileSystemTask task){
+		this.task = task;
+	}
 	
 	/**
 	 * Start watching the filesystem for added or deleted files
 	 * @param	timeInterval	The time interval for polling the filesystem
 	 * */
-	public void start(int timeInterval, String folderToWatch){
-		
-		t = new Timer();
-		t.scheduleAtFixedRate(new WatchDirectoryTask(folderToWatch), 0, timeInterval);
-		running = true;
-
+	public void start(String[] path){
+		if(task != null){
+			task.setPaths(path);
+			task.run();	
+			initialScan();
+		}
+	}
+	
+	/**Do an initial scan of the paths so previously added capsules that are
+	 * already in those paths get loaded*/
+	private void initialScan(){
+		if(task.getPaths() != null){
+			for(String p : task.getPaths()){
+				/*This block gets the directory listing and adds every file
+				 * to the listOfFiles map, using its path as the key and the
+				 * file as the value*/
+				File file = new File(p);
+				
+				if(file.isDirectory()){
+					Map<String, File> listOfFiles = getFileMap(file.listFiles(
+							new JARFilter()));
+					/*This event correspond to those capsules already present in
+					 * the filesystem*/
+					FileSystemEvent evt = new FileSystemEvent(this,(String[])listOfFiles.keySet()
+							.toArray(new String[listOfFiles.keySet().size()]),null);
+					FileSystemService.get().fireFileSystemEvent(evt);
+				} else {
+					log.error(p+" is not a directory");
+				}
+			}	
+		}
+	}
+	
+	private Map<String, File> getFileMap(File[] files){
+		Map<String, File> map = new HashMap<String, File>();
+		for(File key: files){
+			//Verify that the file is indeed a capsule, if not, don't bother
+			if(FileSystemService.isCapsule(key))
+				map.put(key.getPath(), key);
+		}
+		return map;
 	}
 	
 	/**
@@ -75,6 +118,7 @@ public class FileSystemService{
 	public static boolean isCapsule(File jarFile){
 		try{
 			//Check if this file is a JarFile
+			log.debug("Trying to open "+jarFile.getAbsolutePath());
 			JarFile capsule = new JarFile(jarFile);
 			//check to see if there's a config.xml
 			InputStream is = capsule.getInputStream(new ZipEntry("config.xml"));

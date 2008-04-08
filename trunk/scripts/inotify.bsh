@@ -1,0 +1,7 @@
+// An inotify based FileSystemTask
+inotify(){
+	import com.ubisoa.activecloud.services.InotifyFSTask;
+	import com.ubisoa.activecloud.services.FileSystemService;
+
+	FileSystemService.get().addFileSystemTask(new InotifyFSTask());
+}

@@ -83,7 +83,7 @@ public class FileSystemTest extends JFrame{
 	
 	private void startButtonActionPerformed(ActionEvent evt){
 		if(!FileSystemService.get().isRunning())
-			FileSystemService.get().start(1000, "/Users/cesarolea");
+			FileSystemService.get().start(new String[]{"/Users/cesarolea"});
 		else
 			log.error("FileSystemService is null");
 	}
