@@ -34,8 +34,6 @@ public class CapsuleLoaderTest extends JFrame implements FileSystemEventListener
 	private static final Dimension hcIconScrollDimension = new Dimension(146,600);
 	private static final Dimension ncIconScrollDimension = new Dimension(146,600);
 	private static final Dimension mainWindowDimension = new Dimension(800,600);
-	//How many times per second the capsule dir will be polled for changes
-	private static final int capsuleDirPollingInterval = 3000;
 	
 	public CapsuleLoaderTest(){
 		initComponents();
@@ -93,10 +91,9 @@ public class CapsuleLoaderTest extends JFrame implements FileSystemEventListener
 		log.info("Monitoring: "+f2.getAbsolutePath());
 		if(f.isDirectory()){
 			try{
-				FileSystemService.get().start(CapsuleLoaderTest.capsuleDirPollingInterval,
-						f.getAbsolutePath());
-				FileSystemService.get().start(CapsuleLoaderTest.capsuleDirPollingInterval, 
-						f2.getAbsolutePath());
+				
+				FileSystemService.get().start(new String[]{f.getAbsolutePath(), 
+						f2.getAbsolutePath()});
 			} catch (Exception e) {
 				log.error(e.getMessage());
 				JOptionPane.showMessageDialog(this, e.getMessage(), 
