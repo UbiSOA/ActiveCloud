@@ -1,0 +1,4 @@
+//File actionprovider.bsh
+actionprovider(action){
+	print(nodes.getHardwareCapsuleByAction(action));
+}

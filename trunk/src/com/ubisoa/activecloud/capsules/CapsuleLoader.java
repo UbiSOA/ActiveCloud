@@ -145,9 +145,9 @@ public class CapsuleLoader {
 	}
 	
 	private void addActions(int id, HardwareCapsule c){
-		ArrayList<IAction> actSize = c.getActions();
+		ArrayList<Action> actSize = c.getActions();
 		for(int i=0; i<actSize.size(); i++){
-			IAction a = c.getActions().get(i);
+			Action a = c.getActions().get(i);
 			if(!(actionToId.containsKey(a.getName())))
 				/*The actionToId hash uses the action name as key. The value
 				 * is a two position array with the capsule id in the first

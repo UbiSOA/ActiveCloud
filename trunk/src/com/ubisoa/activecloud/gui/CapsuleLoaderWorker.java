@@ -1,6 +1,5 @@
 package com.ubisoa.activecloud.gui;
 
-import java.awt.BorderLayout;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.io.File;
@@ -10,10 +9,11 @@ import java.util.concurrent.ExecutionException;
 import java.util.jar.JarFile;
 
 import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.SwingUtilities;
 
 import org.apache.log4j.Logger;
 import org.jdesktop.swingworker.SwingWorker;
-import org.jdesktop.swingx.JXPanel;
 
 import com.ubisoa.activecloud.capsules.HardwareCapsule;
 import com.ubisoa.activecloud.capsules.ICapsule;
@@ -26,20 +26,15 @@ import com.ubisoa.activecloud.services.NodeAccessService;
 public class CapsuleLoaderWorker extends SwingWorker<List<ICapsule>, String>{
 	private static Logger log = Logger.getLogger(CapsuleLoaderWorker.class);
 
-	private JXPanel hcViewer;
-	private JXPanel ncViewer;
-	private BottomTabbedPanel configUI;
 	private String[] filenames;
+	private CapsuleLoaderTest mainGUI;
 	
 	private static final float iconAlignmentX = 0.5f;
 	private static final float iconAlignmentY = 0.5f;
 	
-	public CapsuleLoaderWorker(JXPanel hcViewer, JXPanel ncViewer, BottomTabbedPanel configUI, 
-			String... filenames){
+	public CapsuleLoaderWorker(CapsuleLoaderTest mainGUI, String... filenames){
 
-		this.hcViewer = hcViewer;
-		this.ncViewer = ncViewer;
-		this.configUI = configUI;
+		this.mainGUI = mainGUI;
 		this.filenames = filenames;
 	}
 	
@@ -56,8 +51,12 @@ public class CapsuleLoaderWorker extends SwingWorker<List<ICapsule>, String>{
 						
 						@Override
 						public void mouseClicked(MouseEvent arg0) {
-							configUI.add(capsule.getConfigUI(), BorderLayout.CENTER);
-							configUI.revalidate();
+							SwingUtilities.invokeLater(new Runnable(){
+								public void run(){
+									new CapsuleConfigPanel(capsule.getConfigUI()).setVisible(true);
+								}
+							});
+							
 							log.debug("loaded configUI");
 						}
 
@@ -80,15 +79,14 @@ public class CapsuleLoaderWorker extends SwingWorker<List<ICapsule>, String>{
 					});
 					
 					if(capsule instanceof HardwareCapsule){
-						hcViewer.add(capsuleLabel);
-						hcViewer.revalidate();
+						mainGUI.getHcIconViewer().add(capsuleLabel);
+						mainGUI.getHcIconViewer().revalidate();
 					}else if(capsule instanceof NotificationCapsule){
-						ncViewer.add(capsuleLabel);
-						ncViewer.revalidate();
+						mainGUI.getNcIconViewer().add(capsuleLabel);
+						mainGUI.getNcIconViewer().revalidate();
 					}else{
 						log.debug("Instance of what?");
 					}
-					
 				}else{
 					log.debug("Capsule not initialized");
 				}

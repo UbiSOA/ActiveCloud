@@ -1,0 +1,4 @@
+// File getHardwareCapsule.bsh
+gethc(name){
+	return nodes.getHardwareCapsule(name);
+}

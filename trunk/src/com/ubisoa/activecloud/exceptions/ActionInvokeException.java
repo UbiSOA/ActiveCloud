@@ -1,6 +1,6 @@
 package com.ubisoa.activecloud.exceptions;
 
-public class ActionInvokeException extends RuntimeException {
+public class ActionInvokeException extends Exception {
 	/**
 	 * 
 	 */

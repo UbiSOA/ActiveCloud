@@ -23,7 +23,8 @@ import java.awt.Color;
    Blue(Color.blue),
    Black(0, 0, 0),
    White(255, 255, 255),
-   Gray(Color.gray.getRed(), Color.gray.getGreen(), Color.gray.getBlue());
+   Gray(Color.gray.getRed(), Color.gray.getGreen(), Color.gray.getBlue()),
+   Dark(29,25,25);
   
  //XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
  // constructors

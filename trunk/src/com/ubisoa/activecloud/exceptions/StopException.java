@@ -1,6 +1,6 @@
 package com.ubisoa.activecloud.exceptions;
 
-public class StopException extends RuntimeException{
+public class StopException extends Exception{
 	/**
 	 * 
 	 */

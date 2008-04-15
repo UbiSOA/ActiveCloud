@@ -1,0 +1,6 @@
+//File addobserver.bsh
+addobserver(notification,hardware){
+	h = gethc(hardware);
+	n = getnc(notification);
+	delivery.registerObserver(n,h);
+} 

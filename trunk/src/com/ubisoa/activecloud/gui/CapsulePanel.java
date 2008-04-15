@@ -12,6 +12,7 @@ import javax.imageio.ImageIO;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JFrame;
+import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
 import org.apache.log4j.Logger;
@@ -30,8 +31,10 @@ public class CapsulePanel extends JXPanel implements TransitionTarget{
 	private static final float iconAlignmentX = 0.5f;
 	private static final float iconAlignmentY = 0.5f;
 	private int nextScreen = -1;
+	private int currentScreen = 0;
 	private ScreenTransition st;
 	private Animator anim;
+	private static final Dimension infoIconSize = new Dimension(20,20);
 	
 	public CapsulePanel(){
 		anim = new Animator(200);
@@ -100,7 +103,7 @@ public class CapsulePanel extends JXPanel implements TransitionTarget{
 				final CapsulePanel cp = new CapsulePanel();
 				f.add(cp, BorderLayout.CENTER);
 				f.setPreferredSize(new Dimension(130,600));
-				JButton b = new JButton("Add Image");
+				JButton b = new JButton("New");
 				b.addActionListener(new ActionListener(){
 					public void actionPerformed(ActionEvent evt){
 						try{
@@ -111,18 +114,27 @@ public class CapsulePanel extends JXPanel implements TransitionTarget{
 						}
 					}
 				});
-				f.add(b,BorderLayout.SOUTH);
+				JButton prev = new JButton(">");
+				prev.addActionListener(new ActionListener(){
+					public void actionPerformed(ActionEvent evt){
+						
+					}
+				});
+				f.add(b, BorderLayout.SOUTH);
 				f.pack();
 				f.setVisible(true);
 			}
 		});
 	}
-
+	
 	@Override
 	public void setupNextScreen() {
 		removeAll();
 		if(nextScreen == -1){
 			add(getLastPanel());	
+		}else{
+			log.debug("Loaded screen "+nextScreen);
+			add(imagePanels.get(nextScreen));
 		}
 	}
 }

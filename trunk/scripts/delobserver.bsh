@@ -1,0 +1,6 @@
+//File removeobserver.bsh
+delobserver(notification,hardware){
+	h = gethc(hardware);
+	n = nodes.getNotificationCapsule(notification);
+	delivery.removeObserver(n,h);
+} 

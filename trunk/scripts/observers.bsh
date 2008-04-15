@@ -1,0 +1,23 @@
+//File observers.bsh
+observers(){
+	allObs = delivery.getObservers();
+	i = 0;
+	StringBuilder sb = new StringBuilder();
+	for(obsList : allObs){
+		//Delivery link list
+		hc = nodes.getHardwareCapsule(i);
+		sb.append(hc.toString());
+		sb.append(": ");
+		j = 0;
+		for(link : obsList){
+			if(j != 0){
+				sb.append(", ");
+			}
+			nc = link.getNotificationCapsule();
+			sb.append(nc.toString());
+			j++;
+		}
+		i++;
+		print(sb.toString());
+	}
+}

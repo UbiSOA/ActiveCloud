@@ -11,6 +11,7 @@ import com.ubisoa.activecloud.capsules.HardwareCapsule;
 import com.ubisoa.activecloud.capsules.IRule;
 import com.ubisoa.activecloud.capsules.NotificationCapsule;
 import com.ubisoa.activecloud.exceptions.CapsuleInitException;
+import com.ubisoa.activecloud.exceptions.ReceiveException;
 
 
 public class DeliveryService{
@@ -38,7 +39,8 @@ public class DeliveryService{
 			if(!observers.isEmpty() && observers.size()>=id){
 				obs = observers.get(id);
 				
-				doPublish(obs,payload);
+				doPublish(obs,payload);		
+				
 			}else{
 				log.debug("No registered observer found for "+capsuleName);
 			}
@@ -59,14 +61,30 @@ public class DeliveryService{
 			obs = observers.get(id);
 			log.debug("Selected Observer: "+obs.getClass().getName());
 			
-			doPublish(obs,payload);
+			doPublish(obs,payload);		
 		}
 	}
 	
-	private static void doPublish(List<DeliveryLink> obs, Element payload){
-		for(DeliveryLink nc : obs){
+	private static void doPublish(final List<DeliveryLink> obs, final Element payload){
+		for(final DeliveryLink nc : obs){
 			nc.getNotificationCapsule().setConfigElement(nc.getConfig());
-			nc.getNotificationCapsule().receive(payload);
+			log.debug("doPublish, about to send payload to "+
+					nc.getNotificationCapsule().getClass().getName());
+			
+			/*A new thread is created for each notificator, this way if one of them
+			 * raises an exception, it doesn't interfere with the others*/
+			new Runnable(){
+				public void run(){
+					try{
+						nc.getNotificationCapsule().receive(payload);	
+					}catch(ReceiveException re){
+						log.error(re.getMessage());
+					}catch(Exception e){
+						log.error(e.getMessage());
+					}
+				}
+			}.run();
+			
 		}
 	}
 	
@@ -89,36 +107,40 @@ public class DeliveryService{
 		 * If there are no observers registered for this hc, create a new list
 		 * and add it in the corresponding slot
 		 * */
-		log.debug("Registering "+deliveryLink.getClass().getCanonicalName()+" (DeliveryLink) " +
-				"as observer for " + p.getClass().getCanonicalName()+ " messages");
-		int id = getHardwareCapsuleId(p);
-		log.debug("Got ID "+id+" of the HardwareCapsule");
-		log.debug("Current Observer size: "+observers.size());
-		
-		if((observers.size() < id) || (observers.isEmpty())){
-			observers.ensureCapacity(id+1);
-			List<DeliveryLink> temp = new ArrayList<DeliveryLink>();
-			temp.add(deliveryLink);
-			observers.add(id, temp);
-			log.debug("Done registering observer (DeliveryLink)");
-		} else {
-			/*
-			 * If there are observers for that id, get the list and append the new
-			 * observer
-			 * */
-			log.debug("The Observers array is big enough ("+observers.size()+"), " +
-					"saving...");
-			observers.get(id).add(deliveryLink);
+		if(deliveryLink != null && p != null){
+			log.debug("Registering "+deliveryLink.getClass().getCanonicalName()+" (DeliveryLink) " +
+					"as observer for " + p.getClass().getCanonicalName()+ " messages");
+			int id = getHardwareCapsuleId(p);
+			log.debug("Got ID "+id+" of the HardwareCapsule");
+			log.debug("Current Observer size: "+observers.size());
+			
+			if((observers.size() < id) || (observers.isEmpty())){
+				observers.ensureCapacity(id+1);
+				List<DeliveryLink> temp = new ArrayList<DeliveryLink>();
+				temp.add(deliveryLink);
+				observers.add(id, temp);
+				log.debug("Done registering observer (DeliveryLink)");
+			} else {
+				/*
+				 * If there are observers for that id, get the list and append the new
+				 * observer
+				 * */
+				log.debug("The Observers array is big enough ("+observers.size()+"), " +
+						"saving...");
+				observers.get(id).add(deliveryLink);
 
+			}	
 		}
 	}
 	
 	public void registerObserver(DeliveryLink deliveryLink, HardwareCapsule p,
 			List<IRule> rules){
-		for(IRule r : rules){
-			deliveryLink.addRule(r);
+		if(deliveryLink != null && p != null && rules != null){
+			for(IRule r : rules){
+				deliveryLink.addRule(r);
+			}
+			registerObserver(deliveryLink, p);	
 		}
-		registerObserver(deliveryLink, p);
 	}
 	
 	public void registerObserver(NotificationCapsule nc, HardwareCapsule p){
@@ -126,25 +148,27 @@ public class DeliveryService{
 		 * If there are no observers registered for this hc, create a new list
 		 * and add it in the corresponding slot
 		 * */
-		log.debug("Registering "+nc.getClass().getCanonicalName()+" as observer for " +
-				p.getClass().getCanonicalName()+ " messages");
-		int id = getHardwareCapsuleId(p);
-		log.debug("Got ID "+id+" of the HardwareCapsule");
-		log.debug("Current Observer size: "+observers.size());
-		
-		if((observers.size() < id) || (observers.isEmpty())){
-			observers.ensureCapacity(id+1);
-			List<DeliveryLink> temp = new ArrayList<DeliveryLink>();
-			temp.add(new DeliveryLink(nc));
-			observers.add(id, temp);
-			log.debug("Done registering observer");
-		} else {
-			/*
-			 * If there are observers for that id, get the list and append the new
-			 * observer
-			 * */
-			log.debug("The Observers array is big enough ("+observers.size()+"), saving...");
-			observers.get(id).add(new DeliveryLink(nc));
+		if(nc != null && p != null){
+			log.debug("Registering "+nc.getClass().getCanonicalName()+" as observer for " +
+					p.getClass().getCanonicalName()+ " messages");
+			int id = getHardwareCapsuleId(p);
+			log.debug("Got ID "+id+" of the HardwareCapsule");
+			log.debug("Current Observer size: "+observers.size());
+			
+			if((observers.size() < id) || (observers.isEmpty())){
+				observers.ensureCapacity(id+1);
+				List<DeliveryLink> temp = new ArrayList<DeliveryLink>();
+				temp.add(new DeliveryLink(nc));
+				observers.add(id, temp);
+				log.debug("Done registering observer");
+			} else {
+				/*
+				 * If there are observers for that id, get the list and append the new
+				 * observer
+				 * */
+				log.debug("The Observers array is big enough ("+observers.size()+"), saving...");
+				observers.get(id).add(new DeliveryLink(nc));
+			}	
 		}
 	}
 	
@@ -159,11 +183,33 @@ public class DeliveryService{
 	}
 	
 	public void removeObserver(HardwareCapsule p, DeliveryLink d){
-		getObservers(p).remove(d);
+		if(p != null && d != null){
+			getObservers(p).remove(d);	
+		}
 	}
 	
 	public void removeObserver(HardwareCapsule p, int observerId){
-		getObservers(p).remove(observerId);
+		if(p != null){
+			getObservers(p).remove(observerId);	
+		}
+	}
+	
+	public void removeObserver(NotificationCapsule n, HardwareCapsule p){
+		if(n != null && p != null){
+			List<DeliveryLink> observers = getObservers(p); 
+			int i = 0;
+			boolean toDelete = false;
+			for(DeliveryLink d : observers){
+				if(d.getNotificationCapsule() == n){
+					toDelete = true;
+					break;
+				}
+				i++;
+			}
+			if(toDelete){
+				getObservers(p).remove(i);
+			}	
+		}
 	}
 	
 	public void addRule(NotificationCapsule nc, HardwareCapsule hc, IRule rule){
@@ -178,6 +224,7 @@ public class DeliveryService{
 		}
 	}
 	
+	@SuppressWarnings("unchecked")
 	public ArrayList<List<DeliveryLink>> getObservers() {
 		return (ArrayList<List<DeliveryLink>>) observers.clone();
 	}

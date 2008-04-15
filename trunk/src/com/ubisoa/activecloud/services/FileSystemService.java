@@ -2,8 +2,11 @@ package com.ubisoa.activecloud.services;
 
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Timer;
@@ -14,6 +17,10 @@ import javax.imageio.ImageIO;
 import javax.swing.event.EventListenerList;
 
 import org.apache.log4j.Logger;
+import org.jdom.Document;
+import org.jdom.Element;
+import org.jdom.JDOMException;
+import org.jdom.input.SAXBuilder;
 
 import com.ubisoa.activecloud.events.FileSystemEvent;
 import com.ubisoa.activecloud.events.FileSystemEventListener;
@@ -127,6 +134,8 @@ public class FileSystemService{
 				BufferedImage bf = ImageIO.read(capsule.getInputStream(
 						new ZipEntry("icon.png")));
 				if(bf != null){
+					is.close();
+					capsule.close();
 					return true;
 				} else {
 					//Couldn't read icon.png
@@ -140,8 +149,58 @@ public class FileSystemService{
 			}
 		} catch (IOException ioe) {
 			log.error(ioe.getMessage());
+			log.error(ioe.getCause());
 			return false;
 		}
+	}
+	
+	public static boolean installCapsule(File jarFile){
+		if(isCapsule(jarFile)){
+			try{
+				JarFile capsule = new JarFile(jarFile);
+				InputStream is = capsule.getInputStream(new ZipEntry("config.xml"));
+				InputStreamReader isr = new InputStreamReader(is);
+				if(isr != null){
+					SAXBuilder builder = new SAXBuilder();
+					Document doc = builder.build(isr);
+					Element root = doc.getRootElement();
+					Element hal = root.getChild("hal");
+					Element nc = root.getChild("nc");
+					File destination = null;
+					File t = new File(".");
+					
+					if(hal == null && nc != null){
+						destination = new File(t.getCanonicalPath()+File.separator+"capsules"+File.separator+"ns");
+						log.debug("Copying to "+destination.getPath());
+					}else if(hal != null && nc == null){
+						destination = new File(t.getCanonicalPath()+File.separator+"capsules"+File.separator+"hal");
+						log.debug("Copying to "+destination.getPath());
+					}else{
+						log.error("Don't know what kind of capsule this is");
+						isr.close();
+						is.close();
+						capsule.close();
+						return false;
+					}
+					
+					isr.close();
+					is.close();
+					return jarFile.renameTo(new File(destination, jarFile.getName()));
+				}
+				log.error("Error reading config.xml");
+				capsule.close();
+			}catch(IOException ioe){
+				log.error(ioe.getMessage());
+				return false;
+			}catch(JDOMException jdome){
+				log.error(jdome.getMessage());
+				return false;
+			}
+			log.error("Error reading config.xml");
+			return false;
+		}
+		log.debug("File is not a capsule");
+		return false;
 	}
 	
 	/**
