@@ -16,8 +16,9 @@ import org.jdesktop.swingx.JXPanel;
 
 public class LineSquarePanel extends JXPanel{
 	private static final Dimension squareSize = new Dimension(140,140);
+	private static final int panelOffset= 80;
 	private static final float lineWidth = 5.0f;
-	private static final Color lineColor = Color.GRAY.brighter();
+	private static Color lineColor = Color.GRAY.brighter();
 	private static final float[] dashs = {10f};
 	private static final float mitterLimit = 1.0f;
 	private static final float dashOffset = 0.0f;
@@ -37,21 +38,21 @@ public class LineSquarePanel extends JXPanel{
 		Graphics2D g2d = (Graphics2D)g.create();
 		
 		//Paint the background
+		//Smooth crimin... I mean, lines
 		g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 		g2d.setColor(backgroundColor);
-		g2d.fillRoundRect(10,10,getWidth()-20,getHeight()-20,30,30);
+		g2d.fillRoundRect(panelOffset,panelOffset,getWidth()-panelOffset*2,
+				getHeight()-panelOffset*2,30,30);
         //Paint white border
 		g2d.setStroke(new BasicStroke(3f));
 		g2d.setColor(Color.WHITE);
-		g2d.drawRoundRect(10, 10, getWidth()-20, getHeight()-20, 30, 30);
+		g2d.drawRoundRect(panelOffset, panelOffset, getWidth()-panelOffset*2, 
+				getHeight()-panelOffset*2, 30, 30);
         //Paint square centered
         Point center = new Point(getWidth()/2, getHeight()/2);
         //topleft corner of the square
         Point topleft = new Point(center.x - (squareSize.width/2), 
         		center.y - (squareSize.height/2));
-        //Smooth crimin... I mean, lines
-        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
-                RenderingHints.VALUE_ANTIALIAS_ON);
         //Dashed stroke
         g2d.setColor(lineColor);
         g2d.setStroke(new BasicStroke(lineWidth,BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND,
@@ -63,14 +64,23 @@ public class LineSquarePanel extends JXPanel{
             //Draw arrow
             g2d.setStroke(new BasicStroke(1, BasicStroke.CAP_SQUARE, BasicStroke.JOIN_MITER));
             //The square part
-            g2d.drawLine(topleft.x + 60, topleft.y + 20, topleft.x + squareSize.width - 120 + 60, topleft.y + 20);
-            g2d.drawLine(topleft.x + 60, topleft.y + 20, topleft.x + 60, topleft.y + squareSize.height - 80);
-            g2d.drawLine(topleft.x + squareSize.width - 120 + 60, topleft.y + 20, topleft.x + squareSize.width - 120 + 60, topleft.y + squareSize.height - 80);
+            g2d.drawLine(topleft.x + 60, topleft.y + 20, topleft.x + 
+            		squareSize.width - 120 + 60, topleft.y + 20);
+            g2d.drawLine(topleft.x + 60, topleft.y + 20, topleft.x + 
+            		60, topleft.y + squareSize.height - 80);
+            g2d.drawLine(topleft.x + squareSize.width - 120 + 60, topleft.y + 
+            		20, topleft.x + squareSize.width - 120 + 60, topleft.y + 
+            		squareSize.height - 80);
             //The triangle part
-            g2d.drawLine(topleft.x + 40, topleft.y + squareSize.height - 80, topleft.x + 60, topleft.y+squareSize.height - 80);
-            g2d.drawLine(topleft.x + squareSize.width - 120 + 80, topleft.y + squareSize.height - 80, topleft.x + squareSize.width - 120 + 60, topleft.y+squareSize.height - 80);
-            g2d.drawLine(topleft.x + 40, topleft.y + squareSize.height - 80, center.x, topleft.y + squareSize.height -40);
-            g2d.drawLine(topleft.x + squareSize.width - 120 + 80, topleft.y + squareSize.height - 80, center.x, topleft.y + squareSize.height -40);	
+            g2d.drawLine(topleft.x + 40, topleft.y + squareSize.height - 80, 
+            		topleft.x + 60, topleft.y+squareSize.height - 80);
+            g2d.drawLine(topleft.x + squareSize.width - 120 + 80, topleft.y + 
+            		squareSize.height - 80, topleft.x + squareSize.width - 120 + 60, 
+            		topleft.y+squareSize.height - 80);
+            g2d.drawLine(topleft.x + 40, topleft.y + squareSize.height - 80, 
+            		center.x, topleft.y + squareSize.height -40);
+            g2d.drawLine(topleft.x + squareSize.width - 120 + 80, topleft.y + 
+            		squareSize.height - 80, center.x, topleft.y + squareSize.height -40);	
         }
         
         //Draw message
@@ -79,6 +89,21 @@ public class LineSquarePanel extends JXPanel{
         g2d.drawString(message, topleft.x - messageXOffset, 
         		topleft.y + squareSize.height + messageYOffset);
         g2d.dispose();
+	}
+	
+	public void paintOk(){
+		LineSquarePanel.lineColor = Color.GREEN.darker();
+		repaint();
+	}
+	
+	public void paintNormal(){
+		LineSquarePanel.lineColor = Color.GRAY.brighter();
+		repaint();
+	}
+	
+	public void paintNotOk(){
+		LineSquarePanel.lineColor = Color.RED.darker();
+		repaint();
 	}
 	
 	public static void main(String args[]){

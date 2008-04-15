@@ -11,9 +11,9 @@ import com.ubisoa.activecloud.exceptions.ReceiveException;
 
 
 public abstract class NotificationCapsule implements ICapsule{
-	private JPanel configUI;
-	private BufferedImage icon;
-	private Element configElement = new Element("config");
+	protected JPanel configUI;
+	protected BufferedImage icon;
+	protected Element configElement = new Element("config");
 	
 	public void init(Element e) throws CapsuleInitException{
 		setConfigElement(e.getChild("config"));
@@ -45,7 +45,11 @@ public abstract class NotificationCapsule implements ICapsule{
 		}
 	}
 	
+	@Override
+	public String toString(){
+		return getClass().getSimpleName();
+	}
+	
 	/*Notification specific*/
-	public abstract void receive(byte[] payload) throws ReceiveException;
 	public abstract void receive(Element payload) throws ReceiveException;
 }

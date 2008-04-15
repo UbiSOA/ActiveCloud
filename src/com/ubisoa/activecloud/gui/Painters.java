@@ -1,5 +1,8 @@
 package com.ubisoa.activecloud.gui;
 
+import java.awt.Color;
+import java.awt.LinearGradientPaint;
+
 import org.jdesktop.swingx.painter.CheckerboardPainter;
 import org.jdesktop.swingx.painter.CompoundPainter;
 import org.jdesktop.swingx.painter.GlossPainter;
@@ -14,6 +17,12 @@ public class Painters {
 				GlossPainter.GlossPosition.TOP);
 		PinstripePainter pp = new PinstripePainter(Colors.Gray.alpha(0.2f),45d);
 		return (new CompoundPainter(mp,gp,pp));
+	}
+	
+	public static Painter matteDark(){
+		MattePainter mp = new MattePainter(Colors.Dark.alpha(0.9f));
+		PinstripePainter pp = new PinstripePainter(Colors.Dark.alpha(0.4f),45d);
+		return (new CompoundPainter(mp,pp));
 	}
 	
 	public static Painter checkerboard(){

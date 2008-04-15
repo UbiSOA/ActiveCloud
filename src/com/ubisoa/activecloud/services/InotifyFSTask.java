@@ -1,8 +1,6 @@
 package com.ubisoa.activecloud.services;
 
 import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
 
 import net.contentobjects.jnotify.JNotify;
 import net.contentobjects.jnotify.JNotifyException;
@@ -19,8 +17,7 @@ public class InotifyFSTask implements FileSystemTask, JNotifyListener {
 	@Override
 	public void run() {
 		
-		int mask =  JNotify.FILE_CREATED | JNotify.FILE_DELETED | 
-			JNotify.FILE_MODIFIED | JNotify.FILE_RENAMED;
+		int mask =  JNotify.FILE_CREATED | JNotify.FILE_DELETED | JNotify.FILE_RENAMED;
 		
 		boolean watchSubtree = false;
 		
@@ -36,6 +33,13 @@ public class InotifyFSTask implements FileSystemTask, JNotifyListener {
 	@Override
 	public void fileCreated(int arg0, String arg1, String arg2) {
 		log.debug(arg1 + " " + arg2);
+		
+		try{
+			Thread.sleep(1000);
+		}catch(InterruptedException ie){
+			log.error(ie.getMessage());
+		}
+		
 		if(FileSystemService.isCapsule(new File(arg1+File.separator+arg2))){
 			FileSystemEvent evt = new FileSystemEvent(this,new String[]{arg1+File.separator+arg2},null);
 			FileSystemService.get().fireFileSystemEvent(evt);

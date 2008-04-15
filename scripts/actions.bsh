@@ -1,0 +1,13 @@
+// File actions.bsh
+actions(){
+	StringBuilder sb = new StringBuilder();
+	i = 0;
+	for(action : nodes.getActionList()){
+		if(i != 0){
+				sb.append(", ");
+		}
+		sb.append(action.getName());
+		i++;
+	}
+	print(sb.toString());
+}

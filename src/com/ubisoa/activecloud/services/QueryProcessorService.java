@@ -8,6 +8,7 @@ import java.io.IOException;
 
 import org.apache.log4j.Logger;
 
+import bsh.ConsoleInterface;
 import bsh.EvalError;
 import bsh.Interpreter;
 
@@ -17,7 +18,7 @@ public class QueryProcessorService {
 	private static Interpreter interpreter;
 	
 	private QueryProcessorService(){
-		interpreter = new Interpreter();
+	
 	}
 	
 	public void eval(String expression) throws EvalError{
@@ -28,19 +29,19 @@ public class QueryProcessorService {
 		interpreter.source(script.getAbsolutePath());
 	}
 	
-	public Interpreter bootstrapInterpreter(Interpreter i){
+	public void bootstrapInterpreter(){
 		File bootstrap = new File("scripts/bootstrap.bsh");
 		
 		try{
 			//import custom commands
-			i.eval("addClassPath(\""+new File(".").getAbsolutePath()+"\")");
-			i.eval("importCommands(\"/scripts\")");
+			interpreter.eval("addClassPath(\""+new File(".").getAbsolutePath()+"\")");
+			interpreter.eval("importCommands(\"/scripts\")");
 			
 			BufferedReader br = new BufferedReader(new FileReader(bootstrap));
 			String line;
 			
 			while((line = br.readLine()) != null){
-				i.eval(line);
+				interpreter.eval(line);
 			}
 		
 			br.close();
@@ -54,7 +55,20 @@ public class QueryProcessorService {
 			log.error("Error reading from boostrap script file");
 			log.error(ioe.getMessage());
 		}
-		return i;
+	}
+	
+	public void startInterpreter(){
+		if(interpreter == null){
+			interpreter = new Interpreter();
+			new Thread(interpreter).start();
+		}
+	}
+	
+	public void startInterpreter(ConsoleInterface console){
+		if(interpreter == null){
+			interpreter = new Interpreter(console);
+			new Thread(interpreter).start();	
+		}
 	}
 	
 	public static QueryProcessorService get(){

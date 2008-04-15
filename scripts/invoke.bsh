@@ -1,0 +1,4 @@
+//File invoke.bsh
+invoke(action){
+	nodes.invokeAction(action);
+}

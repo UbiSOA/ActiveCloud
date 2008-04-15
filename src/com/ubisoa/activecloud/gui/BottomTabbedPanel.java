@@ -6,6 +6,7 @@
 
 package com.ubisoa.activecloud.gui;
 
+import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
 import org.apache.log4j.Logger;
@@ -26,8 +27,8 @@ public class BottomTabbedPanel extends JXPanel {
     
     public BottomTabbedPanel() {
         initComponents();
-        interpreter = new Interpreter(scriptingEditor);
-		interpreter = QueryProcessorService.get().bootstrapInterpreter(interpreter);
+        QueryProcessorService.get().startInterpreter(scriptingEditor);
+		QueryProcessorService.get().bootstrapInterpreter();
 
         SwingUtilities.invokeLater(new Runnable(){
         	public void run(){
@@ -36,12 +37,13 @@ public class BottomTabbedPanel extends JXPanel {
         });
     }
     
-    public JXPanel getCapsuleConfigUI(){
+    public JPanel getCapsuleConfigUI(){
     	return capsuleConfigUI;
     }
     
-    public void setCapsuleConfigUI(JXPanel capsuleConfigUI){
-    	this.capsuleConfigUI = capsuleConfigUI;
+    public void setCapsuleConfigUI(JPanel capsuleConfigUI){
+    	this.capsuleConfigUI.add(capsuleConfigUI);
+    	revalidate();
     }
     
     private void initComponents() {
@@ -50,21 +52,18 @@ public class BottomTabbedPanel extends JXPanel {
         tabPane = new javax.swing.JTabbedPane();
         outputScrollPane = new javax.swing.JScrollPane();
         outputEditor = new org.jdesktop.swingx.JXEditorPane();
-        scriptingScrollPane = new javax.swing.JScrollPane();
         scriptingEditor = new JConsole();
         capsuleConfigScrollPane = new javax.swing.JScrollPane();
-        capsuleConfigUI = new org.jdesktop.swingx.JXPanel();
+        capsuleConfigUI = new JPanel();
 
-        splitPane.setDividerLocation(200);
+        splitPane.setDividerLocation(300);
         splitPane.setOrientation(javax.swing.JSplitPane.VERTICAL_SPLIT);
 
         outputScrollPane.setViewportView(outputEditor);
 
         tabPane.addTab("Output", outputScrollPane);
 
-        scriptingScrollPane.setViewportView(scriptingEditor);
-
-        tabPane.addTab("Scripting", scriptingScrollPane);
+        tabPane.addTab("Scripting", scriptingEditor);
 
         splitPane.setBottomComponent(tabPane);
 
@@ -81,7 +80,7 @@ public class BottomTabbedPanel extends JXPanel {
 
         capsuleConfigScrollPane.setViewportView(capsuleConfigUI);
 
-        splitPane.setLeftComponent(capsuleConfigScrollPane);
+        splitPane.setTopComponent(capsuleConfigScrollPane);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
@@ -96,11 +95,10 @@ public class BottomTabbedPanel extends JXPanel {
     }
     
     private javax.swing.JScrollPane capsuleConfigScrollPane;
-    private org.jdesktop.swingx.JXPanel capsuleConfigUI;
+    private JPanel capsuleConfigUI;
     private org.jdesktop.swingx.JXEditorPane outputEditor;
     private javax.swing.JScrollPane outputScrollPane;
     private JConsole scriptingEditor;
-    private javax.swing.JScrollPane scriptingScrollPane;
     private javax.swing.JSplitPane splitPane;
     private javax.swing.JTabbedPane tabPane;
 }

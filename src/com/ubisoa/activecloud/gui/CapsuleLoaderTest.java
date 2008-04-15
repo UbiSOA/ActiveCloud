@@ -2,13 +2,17 @@ package com.ubisoa.activecloud.gui;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.File;
 
 import javax.swing.BoxLayout;
+import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
+import javax.swing.JToolBar;
 import javax.swing.SwingUtilities;
 
 import org.apache.log4j.Logger;
@@ -28,6 +32,9 @@ public class CapsuleLoaderTest extends JFrame implements FileSystemEventListener
 	private BottomTabbedPanel configUI;
 	private JScrollPane hcIconScroll;
 	private JScrollPane ncIconScroll;
+	private JXPanel mainPanel;
+	private JToolBar toolBar;
+	private CapsuleInstallerPanel cip;
 	
 	private static final Logger log = Logger.getLogger(CapsuleLoaderTest.class);
 	
@@ -39,6 +46,17 @@ public class CapsuleLoaderTest extends JFrame implements FileSystemEventListener
 		initComponents();
 	}
 	
+	private void addToolBarButtons(){
+		JButton installCapsule = new JButton("i");
+		installCapsule.addActionListener(new ActionListener(){
+			public void actionPerformed(ActionEvent evt){
+				installCapsuleButtonClicked(evt);
+			}
+		});
+		toolBar.add(installCapsule);
+		toolBar.add(new JButton("Click me"));
+	}
+	
 	private void initComponents(){
 		FileSystemService.get().addFileSystemEventListener(this);
 		
@@ -46,11 +64,19 @@ public class CapsuleLoaderTest extends JFrame implements FileSystemEventListener
 		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		this.setPreferredSize(CapsuleLoaderTest.mainWindowDimension);
 		
+		mainPanel = new JXPanel();
+		mainPanel.setLayout(new BorderLayout());
+		
+		toolBar = new JToolBar("ActiveCloud Toolbar");
+		addToolBarButtons();
+		add(toolBar, BorderLayout.NORTH);
+		add(mainPanel, BorderLayout.CENTER);
+		
 		splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
 		
 		//Create hardwarecapsule viewer
 		hcIconViewer = new JXPanel();
-		hcIconViewer.setBackgroundPainter(Painters.checkerboard());
+		hcIconViewer.setBackgroundPainter(Painters.matteDark());
 		hcIconViewer.setLayout(new BoxLayout(hcIconViewer, BoxLayout.Y_AXIS));
 		hcIconScroll = new JScrollPane(hcIconViewer);
 		hcIconScroll.setPreferredSize(CapsuleLoaderTest.hcIconScrollDimension);
@@ -69,10 +95,14 @@ public class CapsuleLoaderTest extends JFrame implements FileSystemEventListener
 		configUI = new BottomTabbedPanel();
 		
 		//this.add(splitPane, BorderLayout.CENTER);
-		this.add(hcIconScroll, BorderLayout.WEST);
-		this.add(ncIconScroll, BorderLayout.EAST);
-		this.add(configUI, BorderLayout.CENTER);
-		this.setTitle("ActiveCloud");
+		mainPanel.add(hcIconScroll, BorderLayout.WEST);
+		mainPanel.add(ncIconScroll, BorderLayout.EAST);
+		mainPanel.add(configUI, BorderLayout.CENTER);
+		
+		cip = new CapsuleInstallerPanel(new LineSquarePanel(false));
+		setGlassPane(cip);
+		
+		setTitle("ActiveCloud");
 		this.pack();
 
 		startMonitoring();
@@ -80,8 +110,7 @@ public class CapsuleLoaderTest extends JFrame implements FileSystemEventListener
 
 	public synchronized void fileSystemEventOcurred(FileSystemEvent ce) {
 		log.debug("FileSystemEvent received");
-		new CapsuleLoaderWorker(hcIconViewer, ncIconViewer, configUI, 
-				ce.getAddedJars()).execute();
+		new CapsuleLoaderWorker(this, ce.getAddedJars()).execute();
 	}
 	
 	private void startMonitoring(){
@@ -106,6 +135,10 @@ public class CapsuleLoaderTest extends JFrame implements FileSystemEventListener
 		}
 	}
 	
+	private void installCapsuleButtonClicked(ActionEvent evt){
+		cip.fadeIn();
+	}
+	
 	public static void main(String args[]){
 		
 		SwingUtilities.invokeLater(new Runnable(){
@@ -113,6 +146,18 @@ public class CapsuleLoaderTest extends JFrame implements FileSystemEventListener
 				new CapsuleLoaderTest().setVisible(true);
 			}
 		});
+	}
+
+	public JSplitPane getSplitPane() {
+		return splitPane;
+	}
+
+	public JXPanel getHcIconViewer() {
+		return hcIconViewer;
+	}
+
+	public JXPanel getNcIconViewer() {
+		return ncIconViewer;
 	}
 
 }

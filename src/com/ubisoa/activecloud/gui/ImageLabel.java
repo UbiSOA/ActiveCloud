@@ -1,5 +1,6 @@
 package com.ubisoa.activecloud.gui;
 
+import java.awt.Cursor;
 import java.awt.Point;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
@@ -17,22 +18,22 @@ public class ImageLabel extends JLabel implements MouseListener{
 	 */
 	private static final long serialVersionUID = -8345530376048921661L;
 	private BufferedImage original;
-	private BufferedImage filterOver = null;
 	private BufferedImage filterClick = null;
+	private BufferedImage filterOver = null;
 	
 	public ImageLabel(BufferedImage image){
 		super(new ImageIcon(image));
 		this.original = image;
 		GaussianFilter filter = new GaussianFilter(5);
-		filterOver = new BufferedImage(image.getWidth(), image.getHeight(),
-				BufferedImage.TYPE_INT_ARGB);
-		filter.filter(image, filterOver);
-		
-		GlowFilter glow = new GlowFilter();
-		glow.setAmount(.2f);
 		filterClick = new BufferedImage(image.getWidth(), image.getHeight(),
 				BufferedImage.TYPE_INT_ARGB);
-		glow.filter(original, filterClick);
+		filter.filter(image, filterClick);
+		
+		GlowFilter glow = new GlowFilter();
+		glow.setAmount(.05f);
+		filterOver = new BufferedImage(image.getWidth(), image.getHeight(),
+				BufferedImage.TYPE_INT_ARGB);
+		glow.filter(original, filterOver);
 		addMouseListener(this);
 	}
 	
@@ -44,10 +45,12 @@ public class ImageLabel extends JLabel implements MouseListener{
 
 	public void mouseEntered(MouseEvent arg0) {
 		setIcon(new ImageIcon(filterOver));
+		setCursor(new Cursor(Cursor.HAND_CURSOR));
 	}
 
 	public void mouseExited(MouseEvent arg0) {
 		setIcon(new ImageIcon(original));
+		setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
 	}
 
 	public void mousePressed(MouseEvent arg0) {

@@ -1,6 +1,6 @@
 package com.ubisoa.activecloud.exceptions;
 
-public class StartException extends RuntimeException{
+public class StartException extends Exception{
 	/**
 	 * 
 	 */
