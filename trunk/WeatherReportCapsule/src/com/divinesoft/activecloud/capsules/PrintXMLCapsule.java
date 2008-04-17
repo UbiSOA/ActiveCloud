@@ -18,16 +18,12 @@ import com.ubisoa.activecloud.exceptions.StartException;
 import com.ubisoa.activecloud.exceptions.StopException;
 
 
-public class WeatherReportCapsule extends NotificationCapsule{
-	private static Logger log = Logger.getLogger(WeatherReportCapsule.class);
-	private JPanel configUI;
+public class PrintXMLCapsule extends NotificationCapsule{
+	private static Logger log = Logger.getLogger(PrintXMLCapsule.class);
 	private String prefix;
-	
-	public void receive(byte[] payload) throws ReceiveException {
-		log.debug("receive called, but not implemented");
-	}
 
 	public void receive(Element payload) throws ReceiveException {
+		log.debug(getClass().getName() + "'s receive called");
 		XMLOutputter out = new XMLOutputter(Format.getPrettyFormat());
 		if(prefix != null){
 			log.debug(prefix);
@@ -40,7 +36,7 @@ public class WeatherReportCapsule extends NotificationCapsule{
 	@Override
 	public JPanel getConfigUI() {
 		configUI = new JPanel(new FlowLayout());
-		configUI.add(new JLabel("WeatherReportCapsule"));
+		configUI.add(new JLabel("PrintXMLCapsule"));
 		return configUI;
 	}
 
