@@ -10,11 +10,11 @@ import java.util.List;
 import org.apache.log4j.Logger;
 import org.jdom.Element;
 
-import ubisoa.activecloud.capsules.NotificationCapsule;
-import ubisoa.activecloud.exceptions.CapsuleInitException;
-import ubisoa.activecloud.exceptions.ReceiveException;
-import ubisoa.activecloud.exceptions.StartException;
-import ubisoa.activecloud.exceptions.StopException;
+import com.ubisoa.activecloud.capsules.NotificationCapsule;
+import com.ubisoa.activecloud.exceptions.CapsuleInitException;
+import com.ubisoa.activecloud.exceptions.ReceiveException;
+import com.ubisoa.activecloud.exceptions.StartException;
+import com.ubisoa.activecloud.exceptions.StopException;
 
 import com.sun.syndication.feed.synd.SyndContent;
 import com.sun.syndication.feed.synd.SyndContentImpl;
@@ -44,12 +44,6 @@ public class RSSCapsule extends NotificationCapsule{
 	private static final String defaultTimestampFormat = "yyyy-MM-dd 'at' HH:mm:ss";
 	private String author;
 	private static final String defaultAuthor = "RSSCapsule";
-	
-	@Override
-	public void receive(final byte[] payload) throws ReceiveException {
-		// TODO Auto-generated method stub
-		log.debug("Not implemented");
-	}
 
 	@Override
 	public void receive(Element payload) throws ReceiveException {
