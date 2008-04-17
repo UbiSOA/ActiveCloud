@@ -6,6 +6,6 @@
 		<key name="prefix" value="WRC" />  
 		<key name="timestampformat" value="yyyy.MM.dd 'at' HH:mm:ss z" />
 		<key name="serverurl" value="http://localhost:8080/InfoServ" />
-		<key name="netserv" value="http://127.0.1.1:8080/NetServ8?wsdl" />
+		<key name="netserv" value="http://localhost:8080/NetServ8" />
 	</config>
 </capsule>
