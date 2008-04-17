@@ -1,24 +1,16 @@
 <?xml version="1.0"?>
 <capsule>
+	<nc class="com.divinesoft.activecloud.capsules.RSSCapsule"  />
+		
 	<!-- Feed Types: rss_0.9, rss_0.91, rss_0.92, rss_0.93, rss_0.94, rss_1.0, rss_2.0, 
 	atom_0.3, atom_1.0 -->
-	<nc class="com.divinesoft.activecloud.capsules.RSSCapsule" 
-		feedtype="atom_1.0"
-		feedfilename="rsscapsule.xml"
-		encoding="utf-8"
-		feedtitle="Foo"
-		maxentries="15"
-		timestampformat="HH:mm:ss z" />
-		
-	<!-- Filter example:
-		You can configure some filters to be activated by default. A filter can contain
-		minVal and/or maxVal and must have a parameter. When either minVal or maxVal is
-		omited, there's no lower/upper limit, if there's none, the filter does nothing. 
-		
-	<filters>
-		<filter minval="100" maxval="200" parameter="Light" />
-		<filter maxval="2" parameter="Sound" />
-	</filters>
-	 -->
+	<config>
+		<key name="feedtype" value="atom_1.0" />
+		<key name="feedfilename" value="rsscapsule.xml" />
+		<key name="encoding" value="utf-8" />
+		<key name="feedtitle" value="Foo" />
+		<key name="maxentries" value="15" />
+		<key name="timestampformat" value="HH:mm:ss z" />
+	</config>
 
 </capsule>
