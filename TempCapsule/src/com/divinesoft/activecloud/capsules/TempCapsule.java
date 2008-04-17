@@ -1,23 +1,26 @@
 package com.divinesoft.activecloud.capsules;
 
+import java.awt.Dimension;
 import java.awt.FlowLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Random;
 import java.util.Vector;
 
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
+import javax.swing.JButton;
 import javax.swing.JPanel;
 
 import net.tinyos.tinysoa.common.Network;
 import net.tinyos.tinysoa.common.Parameter;
+import net.tinyos.tinysoa.common.Reading;
 import net.tinyos.tinysoa.server.InfoServ;
 import net.tinyos.tinysoa.server.NetServ;
+import net.tinyos.tinysoa.server.TinySOAServer;
 
 import org.apache.log4j.Logger;
 import org.codehaus.xfire.XFireRuntimeException;
@@ -27,8 +30,8 @@ import org.codehaus.xfire.service.binding.ObjectServiceFactory;
 import org.jdom.Attribute;
 import org.jdom.Element;
 
+import com.ubisoa.activecloud.capsules.Action;
 import com.ubisoa.activecloud.capsules.HardwareCapsule;
-import com.ubisoa.activecloud.capsules.IAction;
 import com.ubisoa.activecloud.exceptions.ActionInvokeException;
 import com.ubisoa.activecloud.exceptions.CapsuleInitException;
 import com.ubisoa.activecloud.exceptions.StartException;
@@ -36,35 +39,17 @@ import com.ubisoa.activecloud.exceptions.StopException;
 import com.ubisoa.activecloud.services.DeliveryService;
 
 public class TempCapsule extends HardwareCapsule{
-	private JPanel configUI;
 	private static Logger log = Logger.getLogger(TempCapsule.class);
 	private InfoServ infoServ = null;
 	private NetServ netServ = null;
-	private static final String defaultTimestampFormat = "yyyy-MM-dd 'at' HH:mm:ss";
+	private final String defaultTimestampFormat = "yyyy-MM-dd 'at' HH:mm:ss";
 	private HashMap<String, String> configValues;
 	private SimpleDateFormat timestamp;
 	private Service infoServiceModel;
 	private Service netServiceModel;
-
-	@Override
-	public void init(Element e) throws CapsuleInitException{
-		//It's a good idea to call super so the config element is configured for us
-		super.init(e);
-		//Setup TinySOA services
-		infoServiceModel = new ObjectServiceFactory().create(InfoServ.class);
-		netServiceModel = new ObjectServiceFactory().create(NetServ.class);
-		//Startup infoServ
-		try{
-			URL infoServUrl = new URL(configValues.get("serverurl"));
-			infoServ = (InfoServ)new XFireProxyFactory().create(infoServiceModel,
-					infoServUrl.getProtocol()+"://"+infoServUrl.getHost()+":"+
-					infoServUrl.getPort()+infoServUrl.getPath());
-		} catch(MalformedURLException mue) {
-			System.out.println(mue.getLocalizedMessage());
-		} catch(XFireRuntimeException xre) {
-			System.out.println(xre.getLocalizedMessage());
-			JOptionPane.showMessageDialog(null, "Could not invoke information service. Is TinySOA server running?");
-		}
+	
+	public TempCapsule(){
+		configValues = new HashMap<String, String>();
 		//Try to format the timestamp according to what the user provided
 		try{
 			timestamp = new SimpleDateFormat(configValues.get("timestampformat"));
@@ -73,15 +58,25 @@ public class TempCapsule extends HardwareCapsule{
 		}catch(IllegalArgumentException iae){
 			timestamp = new SimpleDateFormat(defaultTimestampFormat);						
 		}
+	}
+
+	@Override
+	public void init(Element e) throws CapsuleInitException{
+		//It's a good idea to call super so the config element is configured for us
+		super.init(e);
+		//Setup TinySOA services
+		infoServiceModel = new ObjectServiceFactory().create(InfoServ.class);
+		netServiceModel = new ObjectServiceFactory().create(NetServ.class);
 		
 		/*
 		 * ACTIONS
 		 * */
 
-		addAction(new IAction(){
-			public void run(){
-				Element payload = new Element("payload");
-				payload.setAttribute(new Attribute("class", TempCapsule.class.getName()));
+		addAction(new Action("TempCapsule.TinySOANetworks", 
+				"Gets the name of all TinySOA Networks available"){
+			public void run(Element e){
+				Element payload = createPayloadElement();
+				payload.setAttribute("type","network");
 
 				//Obtain the list
 				if(infoServ != null){
@@ -103,64 +98,12 @@ public class TempCapsule extends HardwareCapsule{
 				}
 				DeliveryService.get().publish(payload);
 			}
-
-			public String getName(){
-				return "TempCapsule.TinySOANetworks";
-			}
-
-			public String getDescription(){
-				return "Gets the name of all TinySOA Networks available";
-			}
 		});
 
-		addAction(new IAction(){
-			public void run(){
-				Element payload = new Element("payload");
-				payload.setAttribute(new Attribute("class",TempCapsule.class.getName()));
-				List<Element> paramEntries = getConfigElement().getChildren();
-
-				/*For each param passed, add a fake reading*/
-				for(final Element p : paramEntries){
-					Element entry = new Element("entry");
-					//The entry name is the same of the attribute passed
-					entry.setAttribute("name",p.getAttributeValue("name"));
-					entry.setAttribute("timestamp",timestamp.format(new Date()));	
-					//Add a random value between 0 and 100
-					entry.addContent(String.valueOf(new Random().nextFloat() * 100));
-					//Add the new fake entry to the payload element
-					payload.addContent(entry);
-				}
-
-				//publish the payload
-				DeliveryService.get().publish(payload);
-			}
-
-			public String getDescription(){
-				return "Simulate a TinySOA reading";
-			}
-
-			public String getName(){
-				return "TempCapsule.TinySOAReading";
-			}
-
-			@Override
-			public String toString(){
-				return getName();
-			}
-		});
-
-		addAction(new IAction(){
-			public String getDescription() {
-				return "Select which TinySOA Network to use";
-			}
-
-			public String getName() {
-				return "TempCapsule.SelectNetwork";
-			}
-
-			public void run() throws ActionInvokeException {
-				Element payload = new Element("payload");
-				payload.setAttribute(new Attribute("class", TempCapsule.class.getName()));
+		addAction(new Action("TempCapsule.SelectNetwork",
+				"Select which TinySOA Network to use"){
+			public void run(Element e) throws ActionInvokeException {
+				Element payload = createPayloadElement();
 				
 				try{
 					URL networkUrl = new URL(configValues.get("netserv"));
@@ -170,7 +113,8 @@ public class TempCapsule extends HardwareCapsule{
 					Element success = new Element("entry");
 					success.setAttribute("name", "Success");
 					success.setAttribute("timestamp",timestamp.format(new Date()));
-					success.addContent("Successfully connected to "+configValues.get("netserv"));
+					success.addContent("Successfully connected to "+
+							configValues.get("netserv"));
 					payload.addContent(success);
 				}catch(MalformedURLException mue){
 					Element error = new Element("entry");
@@ -183,52 +127,223 @@ public class TempCapsule extends HardwareCapsule{
 			}
 		});
 		
-		addAction(new IAction(){
-			public String getDescription() {
-				return "List the sensors available to the TinySOA network";
-			}
-
-			@Override
-			public String getName() {
-				return "TempCapsule.NetworkSensors";
-			}
-
-			public void run() throws ActionInvokeException {
-				Element payload = new Element("payload");
-				payload.setAttribute(new Attribute("class", TempCapsule.class.getName()));
+		addAction(new Action("TempCapsule.NetworkSensors",
+				"Get a list of available sensors in the TinySOA network"){
+			public void run(Element e) throws ActionInvokeException {
+				Element payload = createPayloadElement();
+				payload.setAttribute("type","parameter");
 				
 				if(netServ != null){
-					for(Parameter p : netServ.getSensorTypesList()){
+					Vector<Parameter> parameters = netServ.getSensorTypesList();
+					for(Parameter p : parameters){
 						Element entry = new Element("entry");
 						entry.setAttribute("name", p.getName());
-						entry.setAttribute("value", p.getDescription());
+						entry.setAttribute("description", p.getDescription());
 						payload.addContent(entry);
 					}
 				}
 				DeliveryService.get().publish(payload);
 			}
-			
+		});
+		
+		addAction(new Action("TempCapsule.GetReadings",
+				"Get all readings in a specified timespan"){
+			public void run(Element e) throws ActionInvokeException{
+				Element payload = createPayloadElement();
+				payload.setAttribute("type","reading");
+				//Get the variables passed
+				setVariables(e);
+
+				String startDate = get("startdatetime");
+				String endDate = get("enddatetime"); 
+				String sensorType = get("sensortype");
+				int limit = 0;
+				
+				try{
+					limit = Integer.parseInt(configValues.get("limit"));
+				}catch(NumberFormatException nfe){
+					log.error(nfe.getMessage());
+				}
+
+				if(netServ != null){
+					Vector<Reading> readings = netServ.getReadings(startDate, 
+							endDate, sensorType, limit);
+					for(Reading r : readings){
+						Element entry = new Element("entry");
+						entry.setAttribute("name",r.getParameter());
+						entry.setAttribute("timestamp",timestamp.format(new Date()));
+						entry.setAttribute("readingtime",r.getDateTime());
+						entry.setAttribute("value",r.getValue());
+						entry.setAttribute("nodeid",String.valueOf(r.getNid()));
+						payload.addContent(entry);
+					}
+				}
+				DeliveryService.get().publish(payload);
+			}
+		});
+		
+		addAction(new Action("TempCapsule.GetLastReadings","A listing of the last " +
+				"readings of the sensor network"){
+			public void run(Element e){
+				Element payload = createPayloadElement();
+				payload.setAttribute("type","reading");
+				
+				setVariables(e);
+				String sensorType = configValues.get("sensortype");
+				int limit = 0;
+				try{
+					limit = Integer.parseInt(configValues.get("limit"));
+				}catch(NumberFormatException nfe){
+					log.error(nfe.getMessage());
+				}
+				
+				if(netServ != null){
+					Vector<Reading> readings = netServ.getLastReadings(sensorType, limit);
+					for(Reading r : readings){
+						Element entry = new Element("entry");
+						entry.setAttribute("name",r.getParameter());
+						entry.setAttribute("value",r.getValue());
+						entry.setAttribute("timestamp",timestamp.format(new Date()));
+						entry.setAttribute("readingtime",r.getDateTime());
+						entry.setAttribute("value",r.getValue());
+						entry.setAttribute("nodeid",String.valueOf(r.getNid()));
+						payload.addContent(entry);
+					}
+				}
+				DeliveryService.get().publish(payload);
+			}
+		});
+		
+		addAction(new Action("TempCapsule.GetReadigsUntil","A listing of all available " +
+				"readings until a certain date"){
+			public void run(Element e){
+				Element payload = createPayloadElement();
+				payload.setAttribute("type","reading");
+				
+				setVariables(e);
+				String startdate = configValues.get("startdate");
+				int limit = 0;
+				try{
+					limit = Integer.parseInt(configValues.get("limit"));
+				}catch(NumberFormatException nfe){
+					log.error(nfe.getMessage());
+				}
+				
+				if(netServ != null){
+					Vector<Reading> readings = netServ.getReadingsUntil(startdate, limit);
+					for(Reading r : readings){
+						Element entry = new Element("entry");
+						entry.setAttribute("name",r.getParameter());
+						entry.setAttribute("readingtime",r.getDateTime());
+						entry.setAttribute("value",r.getValue());
+						entry.setAttribute("nodeid",String.valueOf(r.getNid()));
+						payload.addContent(entry);
+					}
+				}
+				DeliveryService.get().publish(payload);
+			}
+		});
+		
+		addAction(new Action("TempCapsule.GetAllReadings","A listing of all available" +
+				"readings until a certain date, with no limit and ordered by date ascending"){
+			public void run(Element e){
+				Element payload = createPayloadElement();
+				payload.setAttribute("type","reading");
+				
+				setVariables(e);
+				String startDate = get("startdatetime");
+				String endDate = get("enddatetime"); 
+				String sensorType = get("sensortype");
+				
+				if(netServ != null){
+					Vector<Reading> readings = netServ.getAllReadings(startDate, endDate, sensorType);
+					for(Reading r : readings){
+						Element entry = new Element("entry");
+						entry.setAttribute("name",r.getParameter());
+						entry.setAttribute("timestamp",timestamp.format(new Date()));
+						entry.setAttribute("readingtime",r.getDateTime());
+						entry.setAttribute("value",r.getValue());
+						entry.setAttribute("nodeid",String.valueOf(r.getNid()));
+						payload.addContent(entry);
+					}
+				}
+				DeliveryService.get().publish(payload);
+			}
 		});
 	}
 
 	@Override
 	public JPanel getConfigUI() {
 		configUI = new JPanel(new FlowLayout());
-		configUI.add(new JLabel("TempCapsule"));
+		JButton startButton = new JButton("Start TinySOA");
+		JButton stopButton = new JButton("Stop TinySOA");
+		
+		startButton.addActionListener(new ActionListener(){
+			public void actionPerformed(ActionEvent evt){
+				startButtonClicked(evt);
+			}
+		});
+		
+		stopButton.addActionListener(new ActionListener(){
+			public void actionPerformed(ActionEvent evt){
+				stopButtonClicked(evt);
+			}
+		});
+		configUI.add(startButton);
+		configUI.add(stopButton);
+		configUI.setPreferredSize(new Dimension(400,300));
 		return configUI;
 	}
 
 	public void start() throws StartException {
+		//Startup infoServ
+		try{
+			URL infoServUrl = new URL(configValues.get("serverurl"));
+			infoServ = (InfoServ)new XFireProxyFactory().create(infoServiceModel,
+					infoServUrl.getProtocol()+"://"+infoServUrl.getHost()+":"+
+					infoServUrl.getPort()+infoServUrl.getPath());
+		} catch(MalformedURLException mue) {
+			log.error(mue.getLocalizedMessage());
+			throw new StartException("The URL provided is not valid.");
+		} catch(XFireRuntimeException xre) {
+			log.error(xre.getLocalizedMessage());
+			throw new StartException(xre.getLocalizedMessage());
+		}
 	}
 
 	public void stop() throws StopException {
+		TinySOAServer.stop();
 	}
 	
 	/**Sets the capsule configuration and stores config values into a hash map*/
+	@SuppressWarnings("unchecked")
 	@Override
 	public void setConfigElement(Element e){
+		super.setConfigElement(e);
 		for(Element key : (List<Element>)e.getChildren()){
 			configValues.put(key.getAttributeValue("name"), key.getAttributeValue("value"));
+		}
+	}
+	
+	private Element createPayloadElement(){
+		Element payload = new Element("payload");
+		payload.setAttribute(new Attribute("class", TempCapsule.class.getName()));
+		return payload;
+	}
+	
+	private void startButtonClicked(ActionEvent evt){
+		try{
+			start();
+		}catch(StartException se){
+			log.error(se.getMessage());
+		}
+	}
+	
+	private void stopButtonClicked(ActionEvent evt){
+		try{
+			stop();
+		}catch(StopException se){
+			log.error(se.getMessage());
 		}
 	}
 }
