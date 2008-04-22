@@ -1,0 +1,11 @@
+//File repeat.bsh
+repeat(action,parameters,frequency){
+	task = new TimerTask(){
+		public void run(){
+			nodes.invokeAction(action,parameters);
+		}
+	};
+	
+	t = new Timer();
+	t.schedule(task,0,(frequency*1000));
+}

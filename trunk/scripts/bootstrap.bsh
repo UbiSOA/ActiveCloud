@@ -16,3 +16,9 @@ net = NetworkStateService.get();
 // Uncomment only ONE of the following:
 inotify();
 //inotifyWin();
+
+// Setup server mode. In server mode, the console is available via HTTP and
+// telnet. This mode should be used with caution, since it opens your application
+// and the entire server to the outside world.
+// The command is: server(n) where 'n' is the port number
+// server(8888);

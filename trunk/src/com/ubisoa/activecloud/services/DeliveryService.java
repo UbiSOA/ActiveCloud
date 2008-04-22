@@ -4,11 +4,13 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import javax.swing.event.EventListenerList;
+
 import org.apache.log4j.Logger;
 import org.jdom.Element;
 
 import com.ubisoa.activecloud.capsules.HardwareCapsule;
-import com.ubisoa.activecloud.capsules.IRule;
+import com.ubisoa.activecloud.capsules.ICapsule;
 import com.ubisoa.activecloud.capsules.NotificationCapsule;
 import com.ubisoa.activecloud.exceptions.CapsuleInitException;
 import com.ubisoa.activecloud.exceptions.ReceiveException;
@@ -19,6 +21,7 @@ public class DeliveryService{
 	private static Logger log = Logger.getLogger(DeliveryService.class);
 	private ArrayList<List<DeliveryLink>> observers;
 	private HashMap<HardwareCapsule,Integer> publishers;
+	private EventListenerList listeners = new EventListenerList();
 	
 	private DeliveryService(){
 		observers = new ArrayList<List<DeliveryLink>>();
@@ -73,7 +76,7 @@ public class DeliveryService{
 			
 			/*A new thread is created for each notificator, this way if one of them
 			 * raises an exception, it doesn't interfere with the others*/
-			new Runnable(){
+			new Thread(){
 				public void run(){
 					try{
 						nc.getNotificationCapsule().receive(payload);	
@@ -84,7 +87,6 @@ public class DeliveryService{
 					}
 				}
 			}.run();
-			
 		}
 	}
 	
@@ -130,16 +132,6 @@ public class DeliveryService{
 				observers.get(id).add(deliveryLink);
 
 			}	
-		}
-	}
-	
-	public void registerObserver(DeliveryLink deliveryLink, HardwareCapsule p,
-			List<IRule> rules){
-		if(deliveryLink != null && p != null && rules != null){
-			for(IRule r : rules){
-				deliveryLink.addRule(r);
-			}
-			registerObserver(deliveryLink, p);	
 		}
 	}
 	
@@ -212,18 +204,6 @@ public class DeliveryService{
 		}
 	}
 	
-	public void addRule(NotificationCapsule nc, HardwareCapsule hc, IRule rule){
-		//See if there's a DeliveryLink for that combo
-		List<DeliveryLink> deliveryLinks = getObservers(hc);
-		log.debug("Iterating DeliveryLinks...");
-		for(DeliveryLink d : deliveryLinks){
-			if(d.getRules().contains(rule)){
-				log.debug("DeliveryLink found, adding rule");
-				d.addRule(rule);
-			}
-		}
-	}
-	
 	@SuppressWarnings("unchecked")
 	public ArrayList<List<DeliveryLink>> getObservers() {
 		return (ArrayList<List<DeliveryLink>>) observers.clone();
@@ -244,14 +224,25 @@ public class DeliveryService{
 		return new ArrayList<DeliveryLink>();
 	}
 	
-	public List<DeliveryLink> getObservers(String capsule){
+	public List<DeliveryLink> getObservers(String name){
 		try{
-			if(NodeAccessService.get().isCapsuleLoaded(capsule)){
-				int id = NodeAccessService.get().getHardwareCapsuleId(capsule);
-				if(!observers.isEmpty() && observers.size() >= id){
-					return observers.get(id);
+			if(name.indexOf('.') == -1){
+				ICapsule c = NodeAccessService.get().getHardwareCapsule(name);
+				if(c != null){
+					int id = NodeAccessService.get().getHardwareCapsuleId(c.getClass().getCanonicalName());
+					if(!observers.isEmpty() && observers.size() >= id){
+						return observers.get(id);
+					}
 				}
-			}			
+			}else{
+				if(NodeAccessService.get().isCapsuleLoaded(name)){
+					int id = NodeAccessService.get().getHardwareCapsuleId(name);
+					if(!observers.isEmpty() && observers.size() >= id){
+						return observers.get(id);
+					}
+				}
+			}
+		
 		}catch(CapsuleInitException cie){
 			log.error(cie.getMessage());
 		}

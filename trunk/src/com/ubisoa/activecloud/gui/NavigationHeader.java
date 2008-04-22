@@ -17,8 +17,11 @@ import java.awt.event.MouseEvent;
 import java.awt.font.FontRenderContext;
 import java.awt.font.TextLayout;
 import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
 import java.util.Stack;
 
+import javax.imageio.ImageIO;
 import javax.swing.Box;
 import javax.swing.JButton;
 import javax.swing.JComponent;
@@ -26,8 +29,6 @@ import javax.swing.SwingUtilities;
 
 import org.jdesktop.animation.timing.Animator;
 import org.jdesktop.animation.timing.TimingTarget;
-import org.jdesktop.fuse.InjectedResource;
-import org.jdesktop.fuse.ResourceInjector;
 
 
 class NavigationHeader extends JComponent {
@@ -37,40 +38,33 @@ class NavigationHeader extends JComponent {
     ////////////////////////////////////////////////////////////////////////////
     // THEME SPECIFIC FIELDS
     ////////////////////////////////////////////////////////////////////////////
-    @InjectedResource
-    private Color lightColor;
-    @InjectedResource
-    private Color shadowColor;
-    @InjectedResource
-    private int preferredHeight;
-    @InjectedResource
+    private Color lightColor = new Color(0x4B5461);
+    private Color shadowColor = new Color(0x000000);
+    private int preferredHeight = 32;
     private BufferedImage backgroundGradient;
-    @InjectedResource
-    private float titleAlpha;
-    @InjectedResource
+    private float titleAlpha = 1.0f;
     private BufferedImage title;
-    @InjectedResource
-    private Font pathFont;
-    @InjectedResource
-    private Color pathColor;
-    @InjectedResource
-    private float pathShadowOpacity;
-    @InjectedResource
-    private Color pathShadowColor;
-    @InjectedResource
-    private int pathShadowDistance;
-    @InjectedResource
-    private int pathShadowDirection;
-    @InjectedResource
+    private Font pathFont = new Font("Arial",Font.PLAIN,18);
+    private Color pathColor = new Color(0xFFFFFF);
+    private float pathShadowOpacity = 0.7f;
+    private Color pathShadowColor = new Color(0x000000);
+    private int pathShadowDistance = 1;
+    private int pathShadowDirection = 60;
     private BufferedImage pathSeparatorLeft;
-    @InjectedResource
     private BufferedImage pathSeparatorRight;
-    @InjectedResource
     private BufferedImage haloPicture;
 
     NavigationHeader() {
-        ResourceInjector.get().inject(this);
-
+    	try{
+    		backgroundGradient = ImageIO.read(new File("resources/photos/header-gradient.png"));
+    		title = ImageIO.read(new File("resources/photos/header-title.png"));
+    		pathSeparatorLeft = ImageIO.read(new File("resources/photos/header-slash-left.png"));
+    		pathSeparatorRight = ImageIO.read(new File("resources/photos/header-slash-right.png"));
+    		haloPicture = ImageIO.read(new File("resources/photos/header-halo.png"));
+    	}catch(IOException ioe){
+    		System.out.println(ioe.getMessage());
+    	}
+    	
         setLayout(new FlowLayout(FlowLayout.LEFT, 0, 0));
         add(Box.createRigidArea(new Dimension(2, 2)));
 
@@ -85,6 +79,9 @@ class NavigationHeader extends JComponent {
         }
 
         // REMIND: should only be called from EDT?
+        if(buttonStack.size() >= 4){
+        	remove(buttonStack.pop());
+        }
         PathButton pathButton = new PathButton(title);
         add(buttonStack.push(pathButton));
 
@@ -98,6 +95,18 @@ class NavigationHeader extends JComponent {
         }
         revalidate();
         repaint();
+    }
+    
+    public void removeLastLink(){
+    	remove(buttonStack.pop());
+    	
+    	if (buttonStack.size() > 0) {
+            PathButton button = buttonStack.get(buttonStack.size() - 1);
+            button.setHyperlinkCursor(false);
+        }
+    	
+    	revalidate();
+    	repaint();
     }
 
     private void removeLinksAbove(final PathButton pathButton) {
@@ -354,12 +363,19 @@ class NavigationHeader extends JComponent {
             switch (index) {
                 case 0:
                     //TransitionManager.showMainScreen(null);
-                    removeLinksAbove(pathButton);
+                    //removeLinksAbove(pathButton);
+                	TransitionManager.setCapsuleInstallPaneVisible();
+                	System.out.println("Install clicked");
                     break;
                 case 1:
                     //TransitionManager.showAlbums(null);
-                    removeLinksAbove(pathButton);
+                    //removeLinksAbove(pathButton);
+                	TransitionManager.transitionDeliveryLink(new DeliveryLinkGrid());
+                	System.out.println("Configure clicked");
                     break;
+                case 2:
+                	TransitionManager.setInitialView();
+                	break;
                 default:
                     break;
             }
