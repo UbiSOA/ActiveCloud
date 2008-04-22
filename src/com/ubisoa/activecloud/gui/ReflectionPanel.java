@@ -117,7 +117,8 @@ public class ReflectionPanel extends JPanel {
         
         Graphics2D g2 = (Graphics2D) g.create();
         g2.scale(1.0, -1.0);
-        g2.drawImage(reflectionBuffer, 0, -contentPane.getHeight() - height, null);
+        //g2.drawImage(reflectionBuffer, 0, -contentPane.getHeight() - height, null);
+        g2.drawImage(reflectionBuffer, 0, -contentPane.getHeight() - (height / 2), null);
         g2.dispose();
     }
 

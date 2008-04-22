@@ -9,11 +9,11 @@ import java.util.concurrent.ExecutionException;
 import java.util.jar.JarFile;
 
 import javax.swing.JOptionPane;
-import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
 import org.apache.log4j.Logger;
 import org.jdesktop.swingworker.SwingWorker;
+import org.jdesktop.swingx.JXPanel;
 
 import com.ubisoa.activecloud.capsules.HardwareCapsule;
 import com.ubisoa.activecloud.capsules.ICapsule;
@@ -23,16 +23,16 @@ import com.ubisoa.activecloud.exceptions.InvalidCapsuleException;
 import com.ubisoa.activecloud.services.NodeAccessService;
 
 
-public class CapsuleLoaderWorker extends SwingWorker<List<ICapsule>, String>{
-	private static Logger log = Logger.getLogger(CapsuleLoaderWorker.class);
+public class CapsuleWorker extends SwingWorker<List<ICapsule>, String>{
+	private static Logger log = Logger.getLogger(CapsuleWorker.class);
 
 	private String[] filenames;
-	private CapsuleLoaderTest mainGUI;
+	private MainGUI mainGUI;
 	
 	private static final float iconAlignmentX = 0.5f;
 	private static final float iconAlignmentY = 0.5f;
 	
-	public CapsuleLoaderWorker(CapsuleLoaderTest mainGUI, String... filenames){
+	public CapsuleWorker(MainGUI mainGUI, String... filenames){
 
 		this.mainGUI = mainGUI;
 		this.filenames = filenames;
@@ -45,15 +45,16 @@ public class CapsuleLoaderWorker extends SwingWorker<List<ICapsule>, String>{
 			for(final ICapsule capsule : get()){
 				if(!(capsule == null)){
 					final ImageLabel capsuleLabel = new ImageLabel(capsule.getIcon());
-					capsuleLabel.setAlignmentX(CapsuleLoaderWorker.iconAlignmentX);
-					capsuleLabel.setAlignmentY(CapsuleLoaderWorker.iconAlignmentY);
+					capsuleLabel.setAlignmentX(CapsuleWorker.iconAlignmentX);
+					capsuleLabel.setAlignmentY(CapsuleWorker.iconAlignmentY);
+					capsuleLabel.setToolTipText(capsule.toString());
 					capsuleLabel.addMouseListener(new MouseListener(){
-						
 						@Override
 						public void mouseClicked(MouseEvent arg0) {
 							SwingUtilities.invokeLater(new Runnable(){
 								public void run(){
-									new CapsuleConfigPanel(capsule.getConfigUI()).setVisible(true);
+									//new CapsuleConfigPanel(capsule.getConfigUI()).setVisible(true);
+									TransitionManager.transitionConfigureCapsule(capsule.getConfigUI());
 								}
 							});
 							
@@ -81,9 +82,11 @@ public class CapsuleLoaderWorker extends SwingWorker<List<ICapsule>, String>{
 					if(capsule instanceof HardwareCapsule){
 						mainGUI.getHcIconViewer().add(capsuleLabel);
 						mainGUI.getHcIconViewer().revalidate();
+						mainGUI.getHcIconViewer().repaint();
 					}else if(capsule instanceof NotificationCapsule){
 						mainGUI.getNcIconViewer().add(capsuleLabel);
 						mainGUI.getNcIconViewer().revalidate();
+						mainGUI.getNcIconViewer().repaint();
 					}else{
 						log.debug("Instance of what?");
 					}

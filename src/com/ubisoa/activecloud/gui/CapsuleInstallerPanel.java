@@ -63,7 +63,7 @@ public class CapsuleInstallerPanel extends JXPanel{
 			
 		});
 		
-		new FileDrop(System.out, squarePanel, new FileDrop.Listener(){   
+		new FileDrop(squarePanel, new FileDrop.Listener(){   
 			public void filesDropped( java.io.File[] files ){   
 				// handle file drop
 				for(File f : files){
@@ -172,7 +172,7 @@ public class CapsuleInstallerPanel extends JXPanel{
 				f.add(b,BorderLayout.SOUTH);
 				
 				
-				LineSquarePanel box = new LineSquarePanel(false);
+				LineSquarePanel box = new LineSquarePanel(false, "Foo");
 				final CapsuleInstallerPanel cip = new CapsuleInstallerPanel(box);
 				f.setGlassPane(cip);
 				f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);

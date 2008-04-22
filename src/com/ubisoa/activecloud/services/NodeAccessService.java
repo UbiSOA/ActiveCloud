@@ -160,6 +160,27 @@ public final class NodeAccessService{
 		return false;
 	}
 	
+	public boolean isCapsuleLoaded(ICapsule hc){
+		if(loader.getCapsulesCount() == 0){
+			log.debug("CapsuleLoader is reporting 0 capsules loaded so "+hc
+					+" is not there.");
+			return false;
+		}
+		
+		/*iterate the loaded hardware capsules*/
+		if(loader.getHardwareCapsules().contains(hc)){
+			return true;
+		}
+		
+		/*iterate the loaded notification capsules*/
+		if(loader.getNotificationCapsules().contains(hc)){
+			return true;
+		}
+		
+		/*It's not loaded*/
+		return false;
+	}
+	
 	public synchronized ICapsule loadCapsule(JarFile capsule) 
 		throws CapsuleInitException, InvalidCapsuleException{
 		log.debug("Loading capsule "+capsule.getName());
@@ -235,7 +256,7 @@ public final class NodeAccessService{
 	 * string, which get converted to their corresponding XML Element e.g:
 	 * 
 	 * The following string:
-	 * "startdate:01/01/2005, enddate:01/01/2008, parameter:light"
+	 * "startdate=01/01/2005, enddate=01/01/2008, parameter=light"
 	 * 
 	 * Produces:
 	 * <config>
@@ -243,6 +264,10 @@ public final class NodeAccessService{
 	 * 	<key name="enddate" value="01/01/2008" />
 	 * 	<key name="parameter" value="light" />
 	 * </config>
+	 * 
+	 * In order to get the values from the parameter string, a StringTokenizer is used. Each
+	 * token is then divided by equal sign and removed from any leading or trailing whitespace
+	 * (trim).
 	 * */
 	public synchronized void invokeAction(String action, String parameters) 
 		throws ActionInvokeException{
@@ -250,18 +275,40 @@ public final class NodeAccessService{
 		StringTokenizer st = new StringTokenizer(parameters,",");
 		while(st.hasMoreElements()){
 			String element = (String) st.nextElement();
-			int i = element.indexOf(':');
+			int i = element.indexOf('=');
 			if(i == -1){
 				throw new ActionInvokeException("Parameter String is not correctly formatted");
 			}
-			String name = element.substring(0,i);
-			String value = element.substring(i+1);
+			String name = element.substring(0,i).trim();
+			String value = element.substring(i+1).trim();
 			Element key = new Element("key");
 			key.setAttribute("name",name);
 			key.setAttribute("value",value);
 			config.addContent(key);
 		}
 		invokeAction(action,config);
+	}
+	
+	public synchronized void setConfiguration(String name, String parameters) 
+		throws Exception{
+		Element config = new Element("config");
+		StringTokenizer st = new StringTokenizer(parameters,",");
+		
+		while(st.hasMoreElements()){
+			String element = (String) st.nextElement();
+			int i = element.indexOf('=');
+			if(i == -1){
+				throw new Exception("Parameter String is not correctly formatted");
+			}
+			Element key = new Element("key");
+			key.setAttribute("name",element.substring(0,i).trim());
+			key.setAttribute("value",element.substring(i+1).trim());
+			config.addContent(key);
+		}
+		HardwareCapsule hc = getHardwareCapsule(name);
+		if(hc != null){
+			hc.setConfigElement(config);
+		}
 	}
 
 	public static NodeAccessService get() throws CapsuleInitException{

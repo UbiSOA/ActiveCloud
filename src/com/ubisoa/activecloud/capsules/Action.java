@@ -41,17 +41,28 @@ public abstract class Action{
 	/**Set the variables effective for all succesive calls of this action*/
 	@SuppressWarnings("unchecked")
 	public void setVariables(Element e){
+		if(configValues == null){
+			configValues = new HashMap<String, String>();
+		}
 		for(Element key : (List<Element>)e.getChildren()){
-			configValues.put(key.getAttributeValue("name").toLowerCase(), key.getAttributeValue("value"));
+			String name = key.getAttributeValue("name");
+			String value = key.getAttributeValue("value");
+			configValues.put(name.toLowerCase(), value);
 		}
 	}
 	
 	/**Set the variables effective for all succesive calls of this action*/
 	public void setVariable(String key, String value){
+		if(configValues == null){
+			configValues = new HashMap<String, String>();
+		}
 		configValues.put(key.toLowerCase(), value);
 	}
 	
 	public void setVariables(String[] keys, String[] values){
+		if(configValues == null){
+			configValues = new HashMap<String, String>();
+		}
 		if(keys.length == values.length){
 			for(int i=0; i<keys.length; i++){
 				configValues.put(keys[i].toLowerCase(), values[i]);
