@@ -33,10 +33,11 @@ public class DeliveryLink {
 	public String toString(){
 		StringBuilder sb = new StringBuilder();
 		String name = nc.getClass().getName();
-		sb.append(name.substring(name.lastIndexOf('.')+1)+"\n");
-		XMLOutputter out = new XMLOutputter(Format.getPrettyFormat());
-		sb.append(out.outputString(config));
-		log.debug(out.outputString(config));
+		sb.append(name.substring(name.lastIndexOf('.')+1));
+		if(config != null){
+			XMLOutputter out = new XMLOutputter(Format.getPrettyFormat());
+			log.debug(out.outputString(config));	
+		}
 		return sb.toString();
 	}
 }

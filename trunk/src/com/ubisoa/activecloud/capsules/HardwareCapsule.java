@@ -23,7 +23,10 @@ public abstract class HardwareCapsule implements ICapsule{
 	}
 	
 	public void init(Element e) throws CapsuleInitException{
-		setConfigElement(e.getChild("config"));
+		Element config = e.getChild("config");
+		if(config != null){
+			setConfigElement(e.getChild("config"));	
+		}
 	}
 	
 	public JPanel getConfigUI(){

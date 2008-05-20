@@ -2,7 +2,10 @@ package com.ubisoa.activecloud.services;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import javax.swing.event.EventListenerList;
 
@@ -19,12 +22,12 @@ import com.ubisoa.activecloud.exceptions.ReceiveException;
 public class DeliveryService{
 	private static DeliveryService singleton;
 	private static Logger log = Logger.getLogger(DeliveryService.class);
-	private ArrayList<List<DeliveryLink>> observers;
+	private HashMap<Integer, List<DeliveryLink>> observers;
 	private HashMap<HardwareCapsule,Integer> publishers;
 	private EventListenerList listeners = new EventListenerList();
 	
 	private DeliveryService(){
-		observers = new ArrayList<List<DeliveryLink>>();
+		observers = new HashMap<Integer, List<DeliveryLink>>();
 		publishers = new HashMap<HardwareCapsule,Integer>();
 	}
 	
@@ -116,22 +119,16 @@ public class DeliveryService{
 			log.debug("Got ID "+id+" of the HardwareCapsule");
 			log.debug("Current Observer size: "+observers.size());
 			
-			if((observers.size() < id) || (observers.isEmpty())){
-				observers.ensureCapacity(id+1);
+			if(observers.containsKey(id)){
+				log.debug("Appending observer to list");
+				observers.get(id).add(deliveryLink);
+			}else{
+				log.debug("Creating new observer list and appending");
 				List<DeliveryLink> temp = new ArrayList<DeliveryLink>();
 				temp.add(deliveryLink);
-				observers.add(id, temp);
-				log.debug("Done registering observer (DeliveryLink)");
-			} else {
-				/*
-				 * If there are observers for that id, get the list and append the new
-				 * observer
-				 * */
-				log.debug("The Observers array is big enough ("+observers.size()+"), " +
-						"saving...");
-				observers.get(id).add(deliveryLink);
-
-			}	
+				observers.put(id, temp);
+			}
+			log.debug("Done registering observer");
 		}
 	}
 	
@@ -147,20 +144,16 @@ public class DeliveryService{
 			log.debug("Got ID "+id+" of the HardwareCapsule");
 			log.debug("Current Observer size: "+observers.size());
 			
-			if((observers.size() < id) || (observers.isEmpty())){
-				observers.ensureCapacity(id+1);
+			if(observers.containsKey(id)){
+				log.debug("Appending observer to list");
+				observers.get(id).add(new DeliveryLink(nc));
+			}else{
+				log.debug("Creating new observer list and appending");
 				List<DeliveryLink> temp = new ArrayList<DeliveryLink>();
 				temp.add(new DeliveryLink(nc));
-				observers.add(id, temp);
-				log.debug("Done registering observer");
-			} else {
-				/*
-				 * If there are observers for that id, get the list and append the new
-				 * observer
-				 * */
-				log.debug("The Observers array is big enough ("+observers.size()+"), saving...");
-				observers.get(id).add(new DeliveryLink(nc));
-			}	
+				observers.put(id, temp);
+			}
+			log.debug("Done registering observer");
 		}
 	}
 	
@@ -202,11 +195,6 @@ public class DeliveryService{
 				getObservers(p).remove(i);
 			}	
 		}
-	}
-	
-	@SuppressWarnings("unchecked")
-	public ArrayList<List<DeliveryLink>> getObservers() {
-		return (ArrayList<List<DeliveryLink>>) observers.clone();
 	}
 	
 	public List<DeliveryLink> getObservers(int id){
